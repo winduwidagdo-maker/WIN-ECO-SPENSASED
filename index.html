@@ -1,0 +1,2416 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ECO SPENSASED - Pahlawan Lingkungan</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" 
+            integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" 
+            crossorigin="anonymous" 
+            referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Fredoka', 'Nunito', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            min-height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+            padding: 16px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 50%, #43e97b 100%);
+            position: relative; overflow-x: hidden;
+        }
+        #bgImage {
+            position: fixed; top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            object-fit: cover; object-position: center;
+            z-index: -2; pointer-events: none;
+        }
+        #bgOverlay {
+            position: fixed; top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(135, 206, 235, 0.05);
+            z-index: -1; pointer-events: none;
+        }
+
+        #musicBtn {
+            position: fixed; top: 20px; left: 20px; z-index: 9999;
+            width: 60px; height: 60px; border-radius: 50%;
+            border: 4px solid #1b5e20;
+            background: linear-gradient(180deg, #66bb6a 0%, #43a047 100%);
+            cursor: pointer; font-size: 1.7rem;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 6px 0 #1b5e20, 0 8px 0 rgba(0,0,0,0.15), 0 10px 20px rgba(0, 0, 0, 0.3);
+            transition: all 0.12s ease; user-select: none; color: white;
+            pointer-events: auto;
+        }
+        #musicBtn.playing { background: linear-gradient(180deg, #ffca28 0%, #ffa000 100%); border-color: #e65100; }
+        #musicBtn:active { transform: translateY(4px); }
+
+        #homeFloatingBtn {
+            position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+            width: 60px; height: 60px; border-radius: 50%;
+            border: 4px solid #0d3b0e;
+            background: linear-gradient(180deg, #66bb6a 0%, #43a047 100%);
+            cursor: pointer; font-size: 1.7rem;
+            display: none; align-items: center; justify-content: center;
+            box-shadow: 0 6px 0 #0d3b0e, 0 8px 0 rgba(0,0,0,0.15), 0 10px 24px rgba(0, 0, 0, 0.35);
+            transition: all 0.12s ease; user-select: none; color: white;
+            pointer-events: auto;
+        }
+        #homeFloatingBtn.show { display: flex; }
+
+        .game-container {
+            max-width: 1150px; width: 100%;
+            background: rgba(255, 255, 255, 0.35);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border-radius: 48px 48px 32px 32px;
+            box-shadow: 
+                0 20px 0 rgba(27, 94, 32, 0.3),
+                0 24px 0 rgba(0,0,0,0.1),
+                0 30px 60px rgba(0, 0, 0, 0.35),
+                inset 0 -6px 0 rgba(0, 0, 0, 0.05),
+                inset 0 6px 0 rgba(255, 255, 255, 0.6);
+            padding: 32px 34px 38px;
+            border: 5px solid rgba(46, 125, 50, 0.9);
+            position: relative; z-index: 1;
+        }
+
+        #coverPage { text-align: center; padding: 20px 10px 30px; }
+        .cover-logo-container {
+            margin-bottom: 20px; display: flex;
+            justify-content: center; align-items: center;
+            animation: pulseLogo 3s ease-in-out infinite;
+        }
+        .cover-logo-container img {
+            max-width: 100%; max-height: 200px;
+            border-radius: 24px; object-fit: contain;
+            filter: drop-shadow(0 12px 30px rgba(46, 125, 50, 0.5));
+        }
+        @keyframes pulseLogo { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
+        /* ===================================================== */
+        /* PANEL JUDUL - FLEX COLUMN agar subjudul di bawah judul */
+        /* ===================================================== */
+        .cover-title-panel {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            background: linear-gradient(
+                180deg, 
+                rgba(255, 255, 255, 0.75) 0%, 
+                rgba(255, 251, 224, 0.7) 50%,
+                rgba(232, 245, 233, 0.75) 100%
+            );
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 4px solid rgba(255, 193, 7, 0.85);
+            border-radius: 32px;
+            padding: 22px 42px 18px;
+            margin: 0 auto 22px;
+            max-width: fit-content;
+            box-shadow: 
+                0 8px 0 rgba(46, 125, 50, 0.7),
+                0 12px 0 rgba(27, 94, 32, 0.5),
+                0 18px 40px rgba(0, 0, 0, 0.35),
+                inset 0 -3px 0 rgba(0, 0, 0, 0.08),
+                inset 0 3px 0 rgba(255, 255, 255, 0.9),
+                0 0 40px rgba(255, 235, 59, 0.4);
+            position: relative;
+            overflow: hidden;
+            animation: panelGlow 3.5s ease-in-out infinite;
+        }
+        @keyframes panelGlow {
+            0%, 100% {
+                box-shadow: 
+                    0 8px 0 rgba(46, 125, 50, 0.7),
+                    0 12px 0 rgba(27, 94, 32, 0.5),
+                    0 18px 40px rgba(0, 0, 0, 0.35),
+                    inset 0 -3px 0 rgba(0, 0, 0, 0.08),
+                    inset 0 3px 0 rgba(255, 255, 255, 0.9),
+                    0 0 40px rgba(255, 235, 59, 0.4);
+            }
+            50% {
+                box-shadow: 
+                    0 8px 0 rgba(46, 125, 50, 0.7),
+                    0 12px 0 rgba(27, 94, 32, 0.5),
+                    0 18px 44px rgba(0, 0, 0, 0.45),
+                    inset 0 -3px 0 rgba(0, 0, 0, 0.08),
+                    inset 0 3px 0 rgba(255, 255, 255, 0.9),
+                    0 0 60px rgba(255, 235, 59, 0.75);
+            }
+        }
+        .cover-title-panel::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -100%;
+            width: 60%; height: 200%;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                rgba(255, 255, 255, 0) 30%, 
+                rgba(255, 255, 255, 0.7) 50%, 
+                rgba(255, 255, 255, 0) 70%, 
+                transparent 100%);
+            transform: rotate(20deg);
+            animation: panelShine 4s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 2;
+            filter: blur(3px);
+        }
+        @keyframes panelShine {
+            0% { left: -100%; }
+            100% { left: 200%; }
+        }
+
+        /* JUDUL UTAMA - display block, center */
+        .cover-title {
+            font-family: 'Fredoka', sans-serif;
+            font-size: clamp(2.2rem, 6.5vw, 3.5rem);
+            font-weight: 700; 
+            letter-spacing: 4px; 
+            margin: 0;
+            display: block;
+            text-align: center;
+            line-height: 1.1;
+            background: linear-gradient(
+                180deg, 
+                #ffffff 0%, 
+                #fff9c4 20%, 
+                #ffd54f 40%, 
+                #a5d6a7 70%, 
+                #66bb6a 100%
+            );
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            -webkit-text-stroke: 2px #1b5e20;
+            filter: 
+                drop-shadow(0 3px 0 #1b5e20) 
+                drop-shadow(0 6px 0 rgba(27, 94, 32, 0.6))
+                drop-shadow(0 8px 14px rgba(0, 0, 0, 0.4));
+            position: relative;
+            z-index: 3;
+        }
+
+        /* SUBJUDUL - display block, center */
+        .cover-subtitle {
+            font-family: 'Fredoka', sans-serif;
+            font-size: clamp(1rem, 2.5vw, 1.5rem);
+            font-weight: 600; 
+            letter-spacing: 3px; 
+            margin: 0; 
+            text-transform: uppercase;
+            display: block;
+            text-align: center;
+            background: linear-gradient(
+                180deg,
+                #2e7d32 0%,
+                #388e3c 40%,
+                #1b5e20 100%
+            );
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            -webkit-text-stroke: 1px rgba(255, 235, 59, 0.7);
+            filter: 
+                drop-shadow(0 2px 0 rgba(255, 235, 59, 0.9))
+                drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+            position: relative;
+            z-index: 3;
+        }
+
+        .cover-divider {
+            display: flex; align-items: center;
+            justify-content: center; gap: 16px;
+            margin: 0 auto 24px; max-width: 480px;
+        }
+        .cover-divider .line {
+            flex: 1; height: 4px;
+            background: linear-gradient(90deg, transparent, #43a047, transparent);
+            border-radius: 4px;
+        }
+        .cover-divider .leaf-emoji {
+            font-size: 1.8rem;
+            animation: leafBounce 2s ease-in-out infinite;
+            filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.3));
+        }
+        .cover-divider .leaf-emoji:nth-child(2) { animation-delay: 0.2s; }
+        .cover-divider .leaf-emoji:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes leafBounce {
+            0%, 100% { transform: translateY(0) rotate(-5deg); }
+            50% { transform: translateY(-6px) rotate(5deg); }
+        }
+        .cover-description {
+            font-family: 'Nunito', sans-serif;
+            font-size: clamp(0.95rem, 1.9vw, 1.1rem);
+            color: #1b5e20; line-height: 1.7;
+            max-width: 720px; margin: 0 auto 26px;
+            padding: 18px 26px;
+            background: linear-gradient(180deg, #ffffff 0%, #e8f5e9 100%);
+            border-radius: 24px; border: 3px solid #66bb6a;
+            font-weight: 700;
+            box-shadow: 0 6px 0 #a5d6a7, 0 12px 24px rgba(46, 125, 50, 0.2);
+        }
+        .cover-missions-title {
+            font-family: 'Fredoka', sans-serif;
+            font-size: clamp(1.2rem, 2.8vw, 1.7rem);
+            color: #1b5e20; font-weight: 700;
+            margin-bottom: 18px; letter-spacing: 1.5px;
+            text-shadow: 0 3px 0 #a5d6a7;
+        }
+        .cover-missions-title .title-deco {
+            color: #ffa000; margin: 0 10px;
+            display: inline-block;
+            animation: sparkle 1.5s ease-in-out infinite;
+        }
+        @keyframes sparkle { 0%, 100% { transform: scale(1) rotate(0deg); } 50% { transform: scale(1.2) rotate(15deg); } }
+        .cover-missions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px; margin-bottom: 28px;
+            max-width: 1000px; margin-left: auto; margin-right: auto;
+        }
+        .cover-mission-card {
+            display: flex; align-items: center; gap: 14px;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fff0 100%);
+            padding: 16px 20px; border-radius: 22px;
+            border: 4px solid #66bb6a;
+            box-shadow: 0 6px 0 #43a047, 0 12px 20px rgba(46, 125, 50, 0.2);
+            text-align: left; transition: all 0.15s ease;
+            position: relative; overflow: hidden;
+        }
+        .cover-mission-card:hover { transform: translateY(-4px); }
+        .cover-mission-card .mission-num {
+            position: absolute; top: 8px; right: 12px;
+            font-family: 'Fredoka', sans-serif;
+            font-size: 0.72rem; font-weight: 700; color: #fff;
+            background: linear-gradient(180deg, #43a047, #2e7d32);
+            padding: 3px 12px; border-radius: 20px;
+        }
+        .cover-mission-card .cmc-icon {
+            font-size: 2.4rem; flex-shrink: 0;
+            width: 60px; height: 60px;
+            display: flex; align-items: center; justify-content: center;
+            background: linear-gradient(180deg, #c8e6c9 0%, #a5d6a7 100%);
+            border-radius: 16px;
+            box-shadow: 0 4px 0 #66bb6a;
+        }
+        .cover-mission-card .cmc-content { flex: 1; min-width: 0; }
+        .cover-mission-card .cmc-title { font-family: 'Fredoka', sans-serif; font-size: 1rem; font-weight: 600; color: #1b5e20; margin-bottom: 4px; }
+        .cover-mission-card .cmc-desc { font-family: 'Nunito', sans-serif; font-size: 0.8rem; color: #2e7d32; line-height: 1.45; font-weight: 700; }
+        .cover-mission-card[data-misi="1"] { border-color: #43a047; }
+        .cover-mission-card[data-misi="1"] .cmc-icon { background: linear-gradient(180deg, #c8e6c9 0%, #81c784 100%); }
+        .cover-mission-card[data-misi="2"] { border-color: #7cb342; }
+        .cover-mission-card[data-misi="2"] .cmc-icon { background: linear-gradient(180deg, #dcedc8 0%, #aed581 100%); }
+        .cover-mission-card[data-misi="3"] { border-color: #ffb300; }
+        .cover-mission-card[data-misi="3"] .cmc-icon { background: linear-gradient(180deg, #ffe082 0%, #ffca28 100%); }
+        .cover-mission-card[data-misi="4"] { border-color: #29b6f6; }
+        .cover-mission-card[data-misi="4"] .cmc-icon { background: linear-gradient(180deg, #b3e5fc 0%, #4fc3f7 100%); }
+        .cover-mission-card[data-misi="5"] { border-color: #ab47bc; }
+        .cover-mission-card[data-misi="5"] .cmc-icon { background: linear-gradient(180deg, #e1bee7 0%, #ce93d8 100%); }
+        .cover-mission-card[data-misi="6"] { border-color: #ff5722; }
+        .cover-mission-card[data-misi="6"] .cmc-icon { background: linear-gradient(180deg, #ffccbc 0%, #ffab91 100%); }
+        .cover-mission-card[data-misi="7"] { border-color: #ffc107; }
+        .cover-mission-card[data-misi="7"] .cmc-icon { background: linear-gradient(180deg, #fff9c4 0%, #fff176 100%); }
+
+        .cover-features {
+            display: flex; flex-wrap: wrap; justify-content: center;
+            gap: 14px; max-width: 700px; margin: 0 auto 28px;
+        }
+        .cover-feature-item {
+            display: flex; align-items: center; gap: 10px;
+            background: linear-gradient(180deg, #ffffff 0%, #f1f8e9 100%);
+            padding: 10px 20px; border-radius: 40px;
+            border: 3px solid #66bb6a;
+            font-family: 'Fredoka', sans-serif;
+            font-size: 0.88rem; font-weight: 600; color: #1b5e20;
+            box-shadow: 0 4px 0 #43a047;
+        }
+
+        .btn-start-adventure {
+            position: relative !important;
+            z-index: 9999 !important;
+            pointer-events: auto !important;
+            cursor: pointer !important;
+            background: linear-gradient(180deg, #ffe082 0%, #ffb300 50%, #ff8f00 100%);
+            border: 5px solid #e65100;
+            border-radius: 60px;
+            padding: 20px 60px;
+            font-family: 'Fredoka', sans-serif;
+            font-size: clamp(1.2rem, 2.6vw, 1.5rem);
+            font-weight: 700;
+            color: #4e2e00;
+            box-shadow: 
+                0 10px 0 #bf360c,
+                0 18px 36px rgba(230, 81, 0, 0.5),
+                0 0 30px rgba(255, 179, 0, 0.6),
+                inset 0 -5px 0 rgba(0, 0, 0, 0.2),
+                inset 0 5px 0 rgba(255, 255, 255, 0.5);
+            letter-spacing: 3px;
+            transition: all 0.12s ease;
+            animation: btnPulse3D 2.5s ease-in-out infinite;
+            text-transform: uppercase;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            overflow: hidden;
+            text-decoration: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .btn-start-adventure::before {
+            content: ''; position: absolute;
+            top: -50%; left: -100%; width: 60%; height: 200%;
+            background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, 0.9) 50%, rgba(255, 255, 255, 0) 70%, transparent 100%);
+            transform: rotate(20deg);
+            animation: btnShine 3s ease-in-out infinite;
+            pointer-events: none !important; z-index: 1; filter: blur(2px);
+        }
+        .btn-start-adventure::after {
+            content: ''; position: absolute;
+            top: -50%; left: -100%; width: 40%; height: 200%;
+            background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 200, 0) 30%, rgba(255, 255, 200, 0.7) 50%, rgba(255, 255, 200, 0) 70%, transparent 100%);
+            transform: rotate(20deg);
+            animation: btnShine 3s ease-in-out infinite 0.5s;
+            pointer-events: none !important; z-index: 1; filter: blur(3px);
+        }
+        @keyframes btnShine { 0% { left: -100%; } 100% { left: 200%; } }
+        .btn-start-adventure > * { position: relative; z-index: 3; pointer-events: none; }
+        .btn-start-adventure .btn-text {
+            display: inline-block;
+            background: linear-gradient(180deg, #fffde7 0%, #ffffff 30%, #fff8e1 70%, #fffde7 100%);
+            background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 2px 0 #bf360c) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.4)) drop-shadow(0 0 15px rgba(255, 235, 59, 0.8));
+            animation: btnTextGlow 2s ease-in-out infinite;
+        }
+        @keyframes btnTextGlow {
+            0%, 100% { filter: drop-shadow(0 2px 0 #bf360c) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.4)) drop-shadow(0 0 15px rgba(255, 235, 59, 0.8)); }
+            50% { filter: drop-shadow(0 2px 0 #bf360c) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5)) drop-shadow(0 0 25px rgba(255, 255, 255, 1)); }
+        }
+        @keyframes btnPulse3D { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
+        .btn-start-adventure:hover {
+            transform: translateY(-3px);
+            background: linear-gradient(180deg, #ffecb3 0%, #ffca28 50%, #ffa000 100%);
+        }
+        .btn-start-adventure:active { transform: translateY(7px); }
+
+        .bonus-game-section { margin: 40px auto 24px; max-width: 850px; padding: 0 10px; }
+        .bonus-game-card {
+            background: linear-gradient(180deg, #ffffff 0%, #f0f9e8 50%, #fff8e1 100%);
+            border: 6px solid #43a047; border-radius: 36px;
+            padding: 30px 34px; position: relative;
+            box-shadow: 0 12px 0 #1b5e20, 0 20px 44px rgba(46, 125, 50, 0.45);
+            transition: transform 0.15s ease;
+        }
+        .bonus-game-card:hover { transform: translateY(-4px); }
+        .bonus-game-header {
+            display: flex; align-items: center; justify-content: center;
+            gap: 16px; margin-bottom: 14px;
+        }
+        .bonus-game-logo { font-size: 3.4rem; animation: bonusFloat 2.5s ease-in-out infinite; }
+        .bonus-game-logo:last-child { animation-delay: 0.6s; }
+        @keyframes bonusFloat { 0%, 100% { transform: translateY(0) rotate(-8deg); } 50% { transform: translateY(-10px) rotate(8deg); } }
+        .bonus-game-name {
+            font-family: 'Fredoka', sans-serif;
+            font-size: clamp(1.8rem, 4.5vw, 2.5rem);
+            font-weight: 700; color: #1b5e20; letter-spacing: 4px;
+            text-shadow: 0 3px 0 #a5d6a7, 0 6px 0 #66bb6a;
+        }
+        .bonus-game-name .clash-tag { color: #e65100; }
+        .bonus-game-badge {
+            display: inline-block;
+            font-family: 'Fredoka', sans-serif;
+            background: linear-gradient(180deg, #ffe082 0%, #ffb300 100%);
+            color: #4e2e00; padding: 6px 20px; border-radius: 40px;
+            font-size: 0.8rem; font-weight: 700; letter-spacing: 2px;
+            border: 3px solid #e65100;
+            box-shadow: 0 4px 0 #bf360c;
+            margin-bottom: 14px; text-transform: uppercase;
+        }
+        .bonus-game-desc {
+            font-family: 'Nunito', sans-serif;
+            font-size: clamp(0.9rem, 1.9vw, 1.05rem);
+            color: #2e7d32; font-weight: 700; line-height: 1.65;
+            margin-bottom: 20px; text-align: center; padding: 0 14px;
+        }
+        .bonus-game-levels {
+            display: flex; justify-content: center;
+            gap: 14px; flex-wrap: wrap; margin-bottom: 24px;
+        }
+        .bonus-level-item {
+            background: linear-gradient(180deg, #ffffff 0%, #f8fff0 100%);
+            border: 3px solid #66bb6a; border-radius: 18px;
+            padding: 12px 16px; text-align: center; min-width: 150px;
+            box-shadow: 0 5px 0 #43a047;
+            transition: transform 0.15s ease;
+        }
+        .bonus-level-item:hover { transform: translateY(-4px); }
+        .bonus-level-item .stars { font-size: 1rem; letter-spacing: 3px; display: block; margin-bottom: 4px; }
+        .bonus-level-item .lvl-name { font-family: 'Fredoka', sans-serif; font-size: 0.9rem; font-weight: 600; color: #1b5e20; display: block; margin-bottom: 3px; }
+        .bonus-level-item .lvl-desc { font-family: 'Nunito', sans-serif; font-size: 0.7rem; color: #2e7d32; font-weight: 700; line-height: 1.35; }
+        .bonus-level-item[data-level="1"] { border-color: #66bb6a; }
+        .bonus-level-item[data-level="2"] { border-color: #ffa000; }
+        .bonus-level-item[data-level="3"] { border-color: #e53935; }
+
+        .btn-eco-clash {
+            display: inline-flex; align-items: center; gap: 14px;
+            background: linear-gradient(180deg, #66bb6a 0%, #43a047 50%, #2e7d32 100%);
+            border: 5px solid #0d3b0e; border-radius: 60px;
+            padding: 18px 48px; font-family: 'Fredoka', sans-serif;
+            font-size: clamp(1.05rem, 2.4vw, 1.35rem);
+            font-weight: 700; color: #ffffff; cursor: pointer;
+            letter-spacing: 3px;
+            text-transform: uppercase; text-decoration: none;
+            box-shadow: 0 10px 0 #0d3b0e, 0 18px 32px rgba(13, 59, 14, 0.55);
+            transition: all 0.12s ease;
+            animation: btnPulse3D 2.5s ease-in-out infinite;
+            position: relative; overflow: hidden;
+            z-index: 9999; pointer-events: auto;
+        }
+        .btn-eco-clash::before {
+            content: ''; position: absolute;
+            top: -50%; left: -100%; width: 60%; height: 200%;
+            background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, 0.9) 50%, rgba(255, 255, 255, 0) 70%, transparent 100%);
+            transform: rotate(20deg);
+            animation: btnShine 3s ease-in-out infinite;
+            pointer-events: none; z-index: 1; filter: blur(2px);
+        }
+        .btn-eco-clash::after {
+            content: ''; position: absolute;
+            top: -50%; left: -100%; width: 40%; height: 200%;
+            background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 200, 0) 30%, rgba(255, 255, 200, 0.7) 50%, rgba(255, 255, 200, 0) 70%, transparent 100%);
+            transform: rotate(20deg);
+            animation: btnShine 3s ease-in-out infinite 0.5s;
+            pointer-events: none; z-index: 1; filter: blur(3px);
+        }
+        .btn-eco-clash > * { position: relative; z-index: 3; pointer-events: none; }
+        .btn-eco-clash:hover { transform: translateY(-3px); }
+        .btn-eco-clash:active { transform: translateY(7px); }
+
+        .btn-eco-board {
+            display: inline-flex; align-items: center; gap: 14px;
+            background: linear-gradient(180deg, #ffb74d 0%, #fb8c00 50%, #e65100 100%);
+            border: 5px solid #4e2e00; border-radius: 60px;
+            padding: 18px 48px; font-family: 'Fredoka', sans-serif;
+            font-size: clamp(1.05rem, 2.4vw, 1.35rem);
+            font-weight: 700; color: #ffffff; cursor: pointer;
+            letter-spacing: 3px;
+            text-transform: uppercase; text-decoration: none;
+            box-shadow: 0 10px 0 #4e2e00, 0 18px 32px rgba(78, 46, 0, 0.55);
+            transition: all 0.12s ease;
+            animation: btnPulse3D 2.5s ease-in-out infinite;
+            position: relative; overflow: hidden;
+            z-index: 9999; pointer-events: auto;
+        }
+        .btn-eco-board::before {
+            content: ''; position: absolute;
+            top: -50%; left: -100%; width: 60%; height: 200%;
+            background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, 0.9) 50%, rgba(255, 255, 255, 0) 70%, transparent 100%);
+            transform: rotate(20deg);
+            animation: btnShine 3s ease-in-out infinite;
+            pointer-events: none; z-index: 1; filter: blur(2px);
+        }
+        .btn-eco-board::after {
+            content: ''; position: absolute;
+            top: -50%; left: -100%; width: 40%; height: 200%;
+            background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 200, 0) 30%, rgba(255, 255, 200, 0.7) 50%, rgba(255, 255, 200, 0) 70%, transparent 100%);
+            transform: rotate(20deg);
+            animation: btnShine 3s ease-in-out infinite 0.5s;
+            pointer-events: none; z-index: 1; filter: blur(3px);
+        }
+        .btn-eco-board > * { position: relative; z-index: 3; pointer-events: none; }
+        .btn-eco-board:hover { transform: translateY(-3px); }
+        .btn-eco-board:active { transform: translateY(7px); }
+
+        #dashboard { text-align: center; padding: 20px 10px 30px; }
+        .logo-container {
+            margin-bottom: 32px; display: flex;
+            justify-content: center; align-items: center;
+            animation: pulseLogo 3s ease-in-out infinite;
+        }
+        .logo-container img {
+            max-width: 100%; max-height: 220px;
+            border-radius: 24px; object-fit: contain;
+            filter: drop-shadow(0 12px 30px rgba(46, 125, 50, 0.5));
+        }
+        #dashboard .input-area {
+            display: flex; flex-wrap: wrap; justify-content: center;
+            gap: 14px; align-items: center;
+            background: linear-gradient(180deg, #ffffff 0%, #f0f9e8 100%);
+            padding: 20px 26px; border-radius: 60px;
+            max-width: 640px; margin: 0 auto;
+            border: 4px solid #66bb6a;
+            box-shadow: 0 8px 0 #43a047;
+        }
+        #dashboard .input-area label { font-family: 'Fredoka', sans-serif; font-size: 1.35rem; font-weight: 600; color: #1b5e20; }
+        #dashboard .input-area input {
+            padding: 15px 26px; border-radius: 50px;
+            border: 4px solid #2e7d32; font-size: 1.2rem;
+            width: 260px; outline: none;
+            background: linear-gradient(180deg, #f1f8e9 0%, #e8f5e9 100%);
+            font-family: 'Nunito', sans-serif; font-weight: 700; color: #1b5e20;
+        }
+        #dashboard .input-area input.input-error {
+            border-color: #e53935 !important;
+            background: linear-gradient(180deg, #ffebee 0%, #ffcdd2 100%) !important;
+            animation: inputShake 0.5s ease-in-out;
+        }
+        @keyframes inputShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        #dashboard .btn-start {
+            font-family: 'Fredoka', sans-serif;
+            background: linear-gradient(180deg, #ffd54f 0%, #ffb300 100%);
+            border: 4px solid #e65100; border-radius: 50px;
+            padding: 15px 42px; font-size: 1.3rem;
+            font-weight: 700; color: #4e2e00; cursor: pointer;
+            box-shadow: 0 8px 0 #bf360c;
+            transition: all 0.12s ease;
+        }
+        #dashboard .btn-start:active { transform: translateY(5px); }
+
+        .header {
+            display: none; flex-wrap: wrap;
+            align-items: center; justify-content: space-between;
+            background: linear-gradient(180deg, #4caf50 0%, #2e7d32 50%, #1b5e20 100%);
+            padding: 16px 28px; border-radius: 60px;
+            color: white; margin-bottom: 26px;
+            border: 4px solid #ffb300;
+            box-shadow: 0 8px 0 #0d3b0e, 0 16px 30px rgba(13, 59, 14, 0.4), 0 0 20px rgba(255, 179, 0, 0.5);
+            gap: 12px; position: relative; overflow: hidden;
+        }
+        .header::before {
+            content: ''; position: absolute;
+            top: 0; left: -100%; width: 60%; height: 100%;
+            background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.6) 50%, transparent 100%);
+            animation: headerShine 3s ease-in-out infinite;
+            pointer-events: none; z-index: 1;
+        }
+        .header::after {
+            content: ''; position: absolute;
+            top: 0; left: -100%; width: 30%; height: 100%;
+            background: linear-gradient(90deg, transparent 0%, rgba(255, 235, 59, 0.5) 50%, transparent 100%);
+            animation: headerShine 3s ease-in-out infinite 0.4s;
+            pointer-events: none; z-index: 1;
+        }
+        @keyframes headerShine { 0% { left: -100%; } 100% { left: 200%; } }
+        .header.show { display: flex; }
+        .header > * { position: relative; z-index: 2; }
+        .header-left { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+        .header-brand { display: flex; align-items: center; gap: 12px; }
+        .header-logo {
+            width: 54px; height: 54px; border-radius: 50%;
+            background: #ffffff; padding: 3px; object-fit: contain;
+            box-shadow: 0 3px 0 rgba(0, 0, 0, 0.35), 0 6px 14px rgba(0, 0, 0, 0.3);
+            flex-shrink: 0; border: 3px solid #ffca28;
+            transition: transform 0.2s ease;
+        }
+        .header-left h1 {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 1.75rem; letter-spacing: 2.5px; font-weight: 700;
+            text-shadow: 0 2px 0 rgba(0,0,0,0.4), 0 3px 0 #ffca28, 0 5px 10px rgba(255, 202, 40, 0.5);
+        }
+        .header-left .tag {
+            font-family: 'Fredoka', sans-serif;
+            background: linear-gradient(180deg, #ffd54f 0%, #ffb300 100%);
+            color: #4e2e00; padding: 6px 18px; border-radius: 30px;
+            font-weight: 600; font-size: 0.78rem;
+            display: inline-flex; align-items: center; gap: 5px;
+            border: 3px solid #e65100;
+            box-shadow: 0 3px 0 #bf360c;
+        }
+        .header-right { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+        .player-name-area {
+            display: flex; align-items: center; gap: 8px;
+            font-family: 'Fredoka', sans-serif;
+            background: linear-gradient(180deg, #43a047 0%, #2e7d32 100%);
+            padding: 6px 18px 6px 22px; border-radius: 40px;
+            font-weight: 600; font-size: 0.95rem;
+            border: 3px solid #0d3b0e;
+            box-shadow: 0 4px 0 #0d3b0e;
+        }
+        .player-name-area .name-label { font-weight: 700; color: #ffca28; }
+        .xp-display {
+            font-family: 'Fredoka', sans-serif;
+            background: linear-gradient(180deg, #ffd54f 0%, #ffb300 100%);
+            color: #4e2e00; padding: 6px 20px; border-radius: 40px;
+            font-weight: 700; font-size: 1rem;
+            border: 3px solid #e65100;
+            box-shadow: 0 4px 0 #bf360c;
+        }
+        .badge-display { font-size: 1.9rem; }
+
+        .slogan-text {
+            display: none; text-align: center;
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(180deg, #ffffff 0%, #f0f9e8 100%);
+            padding: 12px 24px; border-radius: 40px;
+            margin-bottom: 22px; border: 3px solid #66bb6a;
+            color: #1b5e20; font-weight: 800; font-size: 1.05rem;
+            box-shadow: 0 5px 0 #43a047;
+        }
+        .slogan-text.show { display: block; }
+
+        .wooden-sign-wrapper { 
+            text-align: center; 
+            margin: 8px auto 26px;
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+        .wooden-sign {
+            background: linear-gradient(180deg, #8d6e63 0%, #6d4c41 50%, #4e342e 100%);
+            border: 5px solid #3e2723;
+            border-radius: 20px;
+            padding: 18px 40px; 
+            margin: 0 auto;
+            display: inline-block; 
+            color: #fff8e1;
+            font-family: 'Fredoka', sans-serif;
+            font-size: clamp(1.05rem, 2.9vw, 1.85rem); 
+            font-weight: 700;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 2px;
+            box-shadow: 
+                0 8px 0 #3e2723,
+                0 10px 0 rgba(0,0,0,0.15),
+                0 16px 30px rgba(62, 39, 35, 0.5),
+                0 0 25px rgba(255, 179, 0, 0.4),
+                inset 0 -4px 0 rgba(0, 0, 0, 0.35),
+                inset 0 4px 0 rgba(255, 255, 255, 0.15);
+            animation: woodenSignGlow 3s ease-in-out infinite;
+        }
+        @keyframes woodenSignGlow {
+            0%, 100% {
+                box-shadow: 
+                    0 8px 0 #3e2723,
+                    0 10px 0 rgba(0,0,0,0.15),
+                    0 16px 30px rgba(62, 39, 35, 0.5),
+                    0 0 25px rgba(255, 179, 0, 0.4),
+                    inset 0 -4px 0 rgba(0, 0, 0, 0.35),
+                    inset 0 4px 0 rgba(255, 255, 255, 0.15);
+            }
+            50% {
+                box-shadow: 
+                    0 8px 0 #3e2723,
+                    0 10px 0 rgba(0,0,0,0.15),
+                    0 16px 30px rgba(62, 39, 35, 0.5),
+                    0 0 35px rgba(255, 235, 59, 0.7),
+                    inset 0 -4px 0 rgba(0, 0, 0, 0.35),
+                    inset 0 4px 0 rgba(255, 255, 255, 0.25);
+            }
+        }
+        .wooden-sign::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -100%;
+            width: 60%; height: 200%;
+            background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, 0.8) 50%, rgba(255, 255, 255, 0) 70%, transparent 100%);
+            transform: rotate(15deg);
+            animation: woodenShine 3.5s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 2;
+            filter: blur(2px);
+        }
+        .wooden-sign::after {
+            content: '';
+            position: absolute;
+            top: -50%; left: -100%;
+            width: 40%; height: 200%;
+            background: linear-gradient(90deg, transparent 0%, rgba(255, 235, 59, 0) 30%, rgba(255, 235, 59, 0.6) 50%, rgba(255, 235, 59, 0) 70%, transparent 100%);
+            transform: rotate(15deg);
+            animation: woodenShine 3.5s ease-in-out infinite 0.5s;
+            pointer-events: none;
+            z-index: 2;
+            filter: blur(3px);
+        }
+        @keyframes woodenShine { 0% { left: -100%; } 100% { left: 200%; } }
+        .wooden-sign > * { position: relative; z-index: 3; }
+        .wooden-sign .leaf-icon {
+            display: inline-block;
+            font-size: 1.3em;
+            filter: 
+                drop-shadow(0 0 12px rgba(139, 195, 74, 1))
+                drop-shadow(0 0 20px rgba(76, 175, 80, 0.8))
+                drop-shadow(0 3px 5px rgba(0,0,0,0.4));
+            animation: leafGlow 2s ease-in-out infinite;
+            vertical-align: middle;
+            margin: 0 8px;
+        }
+        .wooden-sign .leaf-icon:first-child { animation-delay: 0.2s; }
+        .wooden-sign .leaf-icon:last-child { animation-delay: 0.6s; }
+        @keyframes leafGlow {
+            0%, 100% { 
+                transform: translateY(0) rotate(-8deg) scale(1);
+                filter: drop-shadow(0 0 12px rgba(139, 195, 74, 1)) drop-shadow(0 0 20px rgba(76, 175, 80, 0.8)) drop-shadow(0 3px 5px rgba(0,0,0,0.4));
+            }
+            50% { 
+                transform: translateY(-5px) rotate(8deg) scale(1.15);
+                filter: drop-shadow(0 0 20px rgba(174, 213, 129, 1)) drop-shadow(0 0 35px rgba(139, 195, 74, 1)) drop-shadow(0 5px 8px rgba(0,0,0,0.5));
+            }
+        }
+        
+        .wooden-sign .sign-text {
+            display: inline-block; 
+            font-weight: 700; 
+            letter-spacing: 3px; 
+            vertical-align: middle;
+            background: linear-gradient(
+                180deg, 
+                #fffde7 0%, 
+                #ffffff 25%, 
+                #ffeb3b 50%, 
+                #ffffff 75%, 
+                #fffde7 100%
+            );
+            background-clip: text; 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.85));
+            -webkit-text-stroke: 0.5px rgba(230, 81, 0, 0.4);
+        }
+        
+        .wooden-sign-wrapper::before {
+            content: '';
+            position: absolute;
+            top: -3px; left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 6px); height: calc(100% + 6px);
+            border-radius: 24px; background: transparent;
+            border: 2px solid rgba(255, 215, 0, 0);
+            animation: borderGlow 3s ease-in-out infinite;
+            pointer-events: none;
+        }
+        @keyframes borderGlow {
+            0%, 100% { border-color: rgba(255, 215, 0, 0.3); box-shadow: 0 0 20px rgba(255, 215, 0, 0.3); }
+            50% { border-color: rgba(255, 235, 59, 0.9); box-shadow: 0 0 45px rgba(255, 235, 59, 0.8); }
+        }
+
+        .mission-tabs {
+            display: none; justify-content: center;
+            gap: 12px; flex-wrap: wrap; margin-bottom: 26px;
+        }
+        .mission-tabs.show { display: flex; }
+        .mission-btn {
+            font-family: 'Fredoka', sans-serif;
+            background: linear-gradient(180deg, #81c784 0%, #4caf50 50%, #388e3c 100%);
+            border: 4px solid #1b5e20; border-radius: 40px;
+            padding: 12px 24px; font-weight: 600; font-size: 0.95rem;
+            color: #ffffff; cursor: pointer;
+            box-shadow: 0 6px 0 #0d3b0e, 0 10px 20px rgba(13, 59, 14, 0.35);
+            display: flex; align-items: center; gap: 8px;
+            transition: all 0.12s ease;
+        }
+        .mission-btn:hover { transform: translateY(-3px); }
+        .mission-btn:active { transform: translateY(5px); }
+        .mission-btn.active {
+            background: linear-gradient(180deg, #ffe082 0%, #ffb300 50%, #ff8f00 100%);
+            border-color: #e65100; color: #4e2e00;
+        }
+        .btn-reset {
+            font-family: 'Fredoka', sans-serif;
+            background: linear-gradient(180deg, #ef5350 0%, #e53935 50%, #c62828 100%);
+            border: 4px solid #8e0000; border-radius: 40px;
+            padding: 12px 24px; color: white;
+            font-weight: 600; font-size: 0.95rem; cursor: pointer;
+            box-shadow: 0 6px 0 #6d0000;
+            transition: all 0.12s ease;
+        }
+        .btn-reset:hover { transform: translateY(-3px); }
+        .btn-reset:active { transform: translateY(5px); }
+
+        .mission-panel {
+            display: none; 
+            background: rgba(255, 255, 255, 0.55);
+            backdrop-filter: blur(3px); border-radius: 40px;
+            padding: 30px 30px 34px;
+            border: 4px solid rgba(102, 187, 106, 0.9);
+            min-height: 440px;
+            box-shadow: 0 8px 0 rgba(67, 160, 71, 0.8);
+        }
+        .mission-panel.show { display: block; }
+        .mission-panel.no-transparent {
+            background: rgba(255, 255, 255, 0.92);
+        }
+        .mission-panel h2 {
+            font-family: 'Fredoka', sans-serif;
+            color: #1b5e20; border-bottom: 4px dashed #66bb6a;
+            padding-bottom: 12px; margin-bottom: 22px;
+            display: flex; align-items: center; gap: 12px;
+            font-size: 1.55rem; flex-wrap: wrap;
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 16px; padding: 14px 20px;
+            font-weight: 600;
+            box-shadow: 0 4px 0 #a5d6a7;
+        }
+        .mission-content { display: flex; flex-direction: column; align-items: center; }
+        .mission-desc {
+            font-family: 'Nunito', sans-serif;
+            font-size: 1.08rem; background: rgba(255, 255, 255, 0.9);
+            padding: 12px 28px; border-radius: 40px;
+            margin-bottom: 20px; color: #1b5e20;
+            border: 3px solid #81c784; text-align: center;
+            font-weight: 700; box-shadow: 0 4px 0 #a5d6a7;
+        }
+        .task-feedback {
+            font-family: 'Fredoka', sans-serif;
+            margin-top: 18px; font-weight: 600;
+            font-size: 1.15rem; min-height: 32px; text-align: center;
+        }
+
+        .drag-area { display: flex; flex-direction: column; gap: 18px; width: 100%; }
+        .trash-items {
+            display: flex; flex-wrap: wrap; gap: 14px;
+            justify-content: center; min-height: 90px;
+            background: rgba(255, 255, 255, 0.85); padding: 20px;
+            border-radius: 32px; border: 4px dashed #66bb6a; width: 100%;
+            box-shadow: 0 6px 0 #a5d6a7;
+        }
+        .trash-item {
+            background: linear-gradient(180deg, #ffffff 0%, #f8fff0 100%);
+            border-radius: 30px; padding: 10px 20px; font-size: 2.2rem;
+            cursor: grab; border: 4px solid #6d4c41;
+            user-select: none; display: inline-flex;
+            align-items: center; gap: 8px;
+            box-shadow: 0 5px 0 #4e342e;
+            transition: transform 0.12s ease;
+        }
+        .trash-item:hover { transform: translateY(-3px); }
+        .trash-item .label {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 0.72rem; background: #f5f5f5;
+            padding: 2px 10px; border-radius: 12px; color: #2e2e2e;
+            font-weight: 600;
+        }
+        .bins { display: flex; flex-wrap: wrap; justify-content: center; gap: 26px; }
+        .bin {
+            padding: 20px 32px; border-radius: 60px 60px 20px 20px;
+            min-width: 140px; text-align: center;
+            font-family: 'Fredoka', sans-serif;
+            color: white; font-weight: 600;
+            border: 5px solid #1b5e20; font-size: 1.05rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+            transition: transform 0.15s ease;
+        }
+        .bin:hover { transform: translateY(-4px); }
+        .bin.organik { background: linear-gradient(180deg, #66bb6a 0%, #43a047 50%, #2e7d32 100%); box-shadow: 0 8px 0 #1b5e20; }
+        .bin.anorganik { background: linear-gradient(180deg, #ffe082 0%, #ffca28 50%, #ffa000 100%); border-color: #e65100; color: #4e2e00; box-shadow: 0 8px 0 #bf360c; }
+        .bin.berbahaya { background: linear-gradient(180deg, #ef5350 0%, #e53935 50%, #c62828 100%); border-color: #b71c1c; box-shadow: 0 8px 0 #8e0000; }
+        .bin span { display: block; font-size: 2.8rem; }
+        .bin .sub { font-family: 'Nunito', sans-serif; font-size: 0.72rem; font-weight: 700; opacity: 0.95; }
+        .task-score { font-family: 'Fredoka', sans-serif; font-weight: 600; color: #1b5e20; font-size: 1.1rem; }
+
+        .compost-items { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; }
+        .compost-item {
+            background: linear-gradient(180deg, #ffffff 0%, #fff3e0 100%);
+            padding: 16px 24px; border-radius: 50px; font-size: 2rem;
+            border: 4px solid #8d6e63; cursor: pointer;
+            user-select: none; display: inline-flex;
+            align-items: center; gap: 10px;
+            box-shadow: 0 6px 0 #5d4037;
+            transition: transform 0.12s ease;
+        }
+        .compost-item:hover { transform: translateY(-3px); }
+        .compost-item.selected { background: linear-gradient(180deg, #a5d6a7 0%, #66bb6a 100%); border-color: #1b5e20; }
+        .compost-item .label {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 0.72rem; background: #f5f5f5;
+            padding: 2px 10px; border-radius: 12px; color: #4e342e;
+            font-weight: 600;
+        }
+        .compost-status { font-family: 'Fredoka', sans-serif; margin: 12px 0; font-weight: 600; color: #1b5e20; font-size: 1.05rem; }
+        .compost-animation { height: 90px; display: flex; align-items: center; justify-content: center; font-size: 3.4rem; }
+        .btn-kompos {
+            font-family: 'Fredoka', sans-serif;
+            background: linear-gradient(180deg, #ffd54f 0%, #ffb300 100%);
+            border: 4px solid #e65100; border-radius: 50px;
+            padding: 14px 36px; font-size: 1.25rem; font-weight: 600;
+            color: #4e2e00; cursor: pointer;
+            margin-top: 12px; box-shadow: 0 7px 0 #bf360c;
+            transition: all 0.12s ease;
+        }
+        .btn-kompos:active { transform: translateY(4px); }
+
+        .palette-landscape {
+            width: 100%; background: rgba(255, 255, 255, 0.9);
+            border-radius: 28px; padding: 16px 20px;
+            border: 4px solid #66bb6a; margin-bottom: 18px;
+            box-shadow: 0 6px 0 #43a047;
+        }
+        .palette-landscape h4 {
+            font-family: 'Fredoka', sans-serif;
+            color: #1b5e20; font-size: 1rem;
+            margin-bottom: 10px; text-align: center;
+            border-bottom: 3px dashed #a5d6a7;
+            padding-bottom: 6px; font-weight: 600;
+        }
+        .palette-items-horizontal { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+        .palette-item-horizontal {
+            background: linear-gradient(180deg, #ffffff 0%, #f8fff0 100%);
+            border-radius: 30px; padding: 8px 16px; font-size: 1.65rem;
+            border: 3px solid #6d4c41; cursor: grab;
+            user-select: none; display: inline-flex;
+            align-items: center; gap: 8px;
+            box-shadow: 0 4px 0 #4e342e;
+            transition: transform 0.12s ease;
+        }
+        .palette-item-horizontal:hover { transform: translateY(-2px); }
+        .palette-item-horizontal .pname {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 0.62rem; font-weight: 600;
+            color: #4e342e; background: #f5f5f5;
+            padding: 2px 10px; border-radius: 12px;
+        }
+        .palette-item-horizontal.good { border-color: #2e7d32; }
+        .palette-item-horizontal.bad { border-color: #c62828; }
+        .palette-item-horizontal.neutral { border-color: #ffa000; }
+        .palette-item-horizontal[data-id="aspal"] { background: linear-gradient(180deg, #424242 0%, #212121 100%); border-color: #000; color: white; padding: 8px 16px; }
+        .palette-item-horizontal[data-id="aspal"] .pname { background: #757575; color: white; }
+        .aspal-visual { display: inline-block; width: 60px; height: 22px; background: #2a2a2a; border: 2px solid #000; border-radius: 3px; position: relative; margin-right: 4px; }
+        .aspal-visual::before { content: ''; position: absolute; top: 50%; left: 4px; right: 4px; height: 3px; background-image: linear-gradient(to right, #ffffff 0%, #ffffff 40%, transparent 40%, transparent 60%, #ffffff 60%, #ffffff 100%); background-size: 14px 3px; background-repeat: repeat-x; transform: translateY(-50%); }
+        .aspal-canvas-visual { display: block; width: 90px; height: 34px; background: #2a2a2a; border: 2px solid #000; border-radius: 4px; position: relative; box-shadow: 0 3px 6px rgba(0,0,0,0.4); transition: transform 0.2s ease; }
+        .aspal-canvas-visual::before { content: ''; position: absolute; top: 50%; left: 6px; right: 6px; height: 4px; background-image: linear-gradient(to right, #ffeb3b 0%, #ffeb3b 50%, transparent 50%, transparent 100%); background-size: 18px 4px; background-repeat: repeat-x; transform: translateY(-50%); border-radius: 2px; }
+        .aspal-canvas-visual.vertical { width: 34px; height: 90px; }
+        .aspal-canvas-visual.vertical::before { top: 6px; bottom: 6px; left: 50%; right: auto; width: 4px; height: auto; background-image: linear-gradient(to bottom, #ffeb3b 0%, #ffeb3b 50%, transparent 50%, transparent 100%); background-size: 4px 18px; background-repeat: repeat-y; transform: translateX(-50%); }
+        .palette-item-horizontal[data-id="trotoar"] { background: linear-gradient(180deg, #a1887f 0%, #8d6e63 100%); border-color: #4e342e; color: white; padding: 8px 14px; }
+        .palette-item-horizontal[data-id="trotoar"] .pname { background: #d7ccc8; color: #3e2723; }
+        .trotoar-visual { display: inline-flex; flex-direction: column; align-items: center; margin-right: 4px; height: 32px; justify-content: flex-end; position: relative; }
+        .trotoar-visual .person { font-size: 1.3rem; line-height: 1; margin-bottom: -2px; z-index: 2; }
+        .trotoar-visual .paving { display: block; width: 36px; height: 14px; background: #a1887f; border: 2px solid #5d4037; border-radius: 2px; position: relative; }
+        .trotoar-visual .paving::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: linear-gradient(to bottom, transparent 0%, transparent 45%, #5d4037 45%, #5d4037 55%, transparent 55%, transparent 100%), linear-gradient(to right, transparent 0%, transparent 45%, #5d4037 45%, #5d4037 55%, transparent 55%, transparent 100%); background-size: 100% 7px, 12px 100%; border-radius: 1px; }
+        .trotoar-canvas-visual { display: flex; flex-direction: column; align-items: center; position: relative; justify-content: flex-end; height: 46px; transition: transform 0.2s ease; }
+        .trotoar-canvas-visual .person { font-size: 2rem; line-height: 1; margin-bottom: -4px; z-index: 2; }
+        .trotoar-canvas-visual .paving { display: block; width: 60px; height: 20px; background: #a1887f; border: 2px solid #5d4037; border-radius: 3px; position: relative; }
+        .trotoar-canvas-visual .paving::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: linear-gradient(to bottom, transparent 0%, transparent 45%, #5d4037 45%, #5d4037 55%, transparent 55%, transparent 100%), linear-gradient(to right, transparent 0%, transparent 45%, #5d4037 45%, #5d4037 55%, transparent 55%, transparent 100%); background-size: 100% 10px, 20px 100%; border-radius: 2px; }
+        .palette-item-horizontal[data-id="pembakaran_sampah"] { background: linear-gradient(180deg, #ef5350 0%, #c62828 100%); border-color: #b71c1c; color: white; padding: 8px 14px; }
+        .palette-item-horizontal[data-id="pembakaran_sampah"] .pname { background: #ffcdd2; color: #b71c1c; }
+        .pembakaran-visual { display: inline-flex; align-items: center; justify-content: center; font-size: 1.6rem; line-height: 1; margin-right: 4px; }
+        .pembakaran-visual .emoji-stack { position: relative; display: inline-block; }
+        .pembakaran-visual .emoji-stack .fire { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); font-size: 0.9rem; animation: fireFlicker 0.6s ease-in-out infinite; filter: drop-shadow(0 0 3px rgba(255, 100, 0, 0.9)); }
+        .pembakaran-canvas-visual { display: inline-flex; align-items: center; justify-content: center; font-size: 2.4rem; line-height: 1; position: relative; }
+        .pembakaran-canvas-visual .emoji-stack { position: relative; display: inline-block; }
+        .pembakaran-canvas-visual .emoji-stack .fire { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); font-size: 1.2rem; animation: fireFlicker 0.6s ease-in-out infinite; filter: drop-shadow(0 0 5px rgba(255, 100, 0, 0.9)); z-index: 2; }
+        @keyframes fireFlicker { 0%, 100% { transform: translateX(-50%) scale(1) rotate(-3deg); opacity: 1; } 50% { transform: translateX(-50%) scale(1.15) rotate(3deg); opacity: 0.9; } }
+        .palette-item-horizontal[data-id="gedung"] { background: linear-gradient(180deg, #78909c 0%, #546e7a 100%); border-color: #37474f; color: white; }
+        .palette-item-horizontal[data-id="gedung"] .pname { background: #cfd8dc; color: #263238; }
+        .city-placed-item[data-id="gedung"] { font-size: 2.8rem; }
+        .city-canvas-wrapper { width: 100%; display: flex; justify-content: center; }
+        .city-canvas {
+            width: 100%; max-width: 950px; height: 580px;
+            background: #66bb6a;
+            background-image: repeating-linear-gradient(100deg, transparent 0px, transparent 8px, rgba(255, 255, 255, 0.08) 8px, rgba(255, 255, 255, 0.08) 9px), repeating-linear-gradient(80deg, transparent 0px, transparent 12px, rgba(0, 0, 0, 0.04) 12px, rgba(0, 0, 0, 0.04) 13px), radial-gradient(circle at 20% 25%, rgba(255, 255, 255, 0.18) 0%, transparent 35%), radial-gradient(circle at 80% 75%, rgba(255, 255, 255, 0.12) 0%, transparent 30%), linear-gradient(180deg, #81c784 0%, #66bb6a 50%, #4caf50 100%);
+            border-radius: 28px; border: 5px solid #2e7d32;
+            position: relative;
+            box-shadow: inset 0 0 0 5px rgba(255, 255, 255, 0.3), inset 0 0 60px rgba(0, 0, 0, 0.12), 0 8px 0 #1b5e20, 0 10px 0 rgba(0,0,0,0.15), 0 14px 26px rgba(27, 94, 32, 0.4);
+            overflow: hidden; cursor: crosshair;
+        }
+        .city-canvas.canvas-drag-over { border-color: #ffb300; box-shadow: inset 0 0 0 5px rgba(255, 235, 59, 0.6), inset 0 0 60px rgba(255, 179, 0, 0.2), 0 0 0 8px #fff3cd, 0 8px 0 #ff8f00, 0 14px 26px rgba(255, 143, 0, 0.4); }
+        .city-placed-item { position: absolute; font-size: 2.4rem; cursor: pointer; user-select: none; line-height: 1; display: flex; align-items: center; gap: 4px; z-index: 10; }
+        .city-placed-item > * { pointer-events: auto; }
+        .city-placed-item .remove-item { font-size: 0.8rem; color: #ffffff; background: linear-gradient(180deg, #ef5350, #c62828); border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-weight: 900; opacity: 0; transition: opacity 0.2s; position: absolute; top: -10px; right: -10px; border: 2px solid #8e0000; box-shadow: 0 3px 0 #8e0000; }
+        .city-placed-item:hover .remove-item { opacity: 1; }
+        .city-placed-item.draggable-placed { cursor: grab; user-select: none; touch-action: none; }
+        .city-placed-item.draggable-placed:hover { filter: drop-shadow(0 0 12px rgba(255, 179, 0, 1)); }
+        .city-placed-item.draggable-placed:active { cursor: grabbing; }
+        .city-placed-item.draggable-placed.dragging-placed { opacity: 0.9; z-index: 9999 !important; filter: drop-shadow(0 0 18px rgba(255, 179, 0, 1)); pointer-events: none; }
+        .city-stats { font-family: 'Fredoka', sans-serif; display: flex; gap: 22px; font-weight: 600; font-size: 1.1rem; margin-bottom: 12px; flex-wrap: wrap; justify-content: center; background: rgba(255, 255, 255, 0.95); padding: 12px 22px; border-radius: 40px; border: 3px solid #66bb6a; box-shadow: 0 5px 0 #43a047; }
+        .city-stats .alam { color: #2e7d32; }
+        .city-stats .polusi { color: #c62828; }
+        .city-controls { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; margin: 14px 0 6px; }
+        .city-btn { font-family: 'Fredoka', sans-serif; padding: 14px 32px; border-radius: 40px; border: none; font-weight: 600; font-size: 1.05rem; cursor: pointer; transition: all 0.12s ease; }
+        .city-btn.save { background: linear-gradient(180deg, #ffe082 0%, #ffb300 50%, #ff8f00 100%); color: #4e2e00; border: 4px solid #e65100; box-shadow: 0 8px 0 #bf360c; }
+        .city-btn.save:hover { transform: translateY(-3px); }
+        .city-btn.clear { background: linear-gradient(180deg, #ef5350 0%, #e53935 50%, #c62828 100%); color: #ffffff; border: 4px solid #8e0000; box-shadow: 0 8px 0 #6d0000; }
+        .city-btn.clear:hover { transform: translateY(-3px); }
+        .city-result { font-family: 'Fredoka', sans-serif; margin-top: 18px; padding: 18px 26px; border-radius: 40px; font-weight: 600; font-size: 1.35rem; text-align: center; width: 100%; }
+        .city-result.success { background: linear-gradient(180deg, #c8e6c9 0%, #a5d6a7 100%); color: #1b5e20; border: 4px solid #2e7d32; box-shadow: 0 6px 0 #1b5e20; }
+        .city-result.fail { background: linear-gradient(180deg, #ffcdd2 0%, #ef9a9a 100%); color: #b71c1c; border: 4px solid #c62828; box-shadow: 0 6px 0 #8e0000; }
+
+        .calc-container { display: flex; flex-direction: column; gap: 18px; width: 100%; max-width: 720px; margin: 0 auto; }
+        .calc-row { display: flex; align-items: center; gap: 14px; background: rgba(255, 255, 255, 0.9); padding: 12px 20px; border-radius: 40px; border: 3px solid #a5d6a7; flex-wrap: wrap; box-shadow: 0 4px 0 #66bb6a; }
+        .calc-row .calc-icon { font-size: 2.1rem; width: 54px; text-align: center; }
+        .calc-row .calc-label { font-family: 'Fredoka', sans-serif; flex: 1; font-weight: 600; color: #1b5e20; font-size: 1rem; }
+        .calc-row input[type="number"] { font-family: 'Nunito', sans-serif; width: 100px; padding: 10px 14px; border-radius: 30px; border: 3px solid #2e7d32; font-size: 1.1rem; font-weight: 700; text-align: center; color: #1b5e20; background: linear-gradient(180deg, #f1f8e9, #e8f5e9); }
+        .calc-row select.calc-select { font-family: 'Nunito', sans-serif; padding: 10px 16px; border-radius: 30px; border: 3px solid #2e7d32; font-size: 1rem; font-weight: 700; color: #1b5e20; background: linear-gradient(180deg, #f1f8e9, #e8f5e9); }
+        .calc-row .calc-total-item { font-family: 'Fredoka', sans-serif; font-weight: 600; color: #c62828; font-size: 0.95rem; }
+        .calc-summary { background: rgba(255, 255, 255, 0.9); border-radius: 28px; padding: 24px 28px; border: 4px solid #43a047; box-shadow: 0 8px 0 #1b5e20; }
+        .calc-summary h3 { font-family: 'Fredoka', sans-serif; color: #1b5e20; font-size: 1.25rem; margin-bottom: 14px; text-align: center; border-bottom: 3px dashed #66bb6a; padding-bottom: 10px; font-weight: 600; }
+        .calc-total-row { font-family: 'Nunito', sans-serif; display: flex; justify-content: space-between; padding: 8px 0; font-size: 1rem; color: #1b5e20; border-bottom: 2px dotted #a5d6a7; font-weight: 700; }
+        .calc-total-row .value-total { font-family: 'Fredoka', sans-serif; font-weight: 600; font-size: 1.25rem; color: #c62828; }
+        .calc-comparison { font-family: 'Fredoka', sans-serif; margin-top: 16px; padding: 16px 20px; border-radius: 24px; text-align: center; font-weight: 600; font-size: 1.05rem; border: 3px solid; }
+        .calc-comparison.good { background: linear-gradient(180deg, #c8e6c9, #a5d6a7); color: #1b5e20; border-color: #2e7d32; }
+        .calc-comparison.warning { background: linear-gradient(180deg, #fff3e0, #ffe0b2); color: #e65100; border-color: #ff9800; }
+        .calc-comparison.bad { background: linear-gradient(180deg, #ffcdd2, #ef9a9a); color: #b71c1c; border-color: #c62828; }
+        .btn-hitung { font-family: 'Fredoka', sans-serif; background: linear-gradient(180deg, #ffe082 0%, #ffb300 50%, #ff8f00 100%); border: 4px solid #e65100; border-radius: 50px; padding: 16px 40px; font-size: 1.25rem; font-weight: 600; color: #4e2e00; cursor: pointer; margin-top: 10px; box-shadow: 0 8px 0 #bf360c; transition: all 0.12s ease; }
+        .btn-hitung:hover { transform: translateY(-3px); }
+
+        .komik-container { display: flex; flex-direction: column; gap: 18px; width: 100%; max-width: 900px; }
+        .komik-frame-wrapper { width: 100%; background: linear-gradient(180deg, #2e7d32, #1b5e20); border-radius: 28px; padding: 14px; border: 4px solid #0d3b0e; position: relative; overflow: hidden; box-shadow: 0 8px 0 #0d3b0e; }
+        .komik-frame-wrapper iframe { width: 100%; height: 600px; border: none; border-radius: 20px; background: white; display: block; }
+        .komik-frame-wrapper.expanded iframe { height: 80vh; }
+        .komik-loading { font-family: 'Fredoka', sans-serif; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(255, 255, 255, 0.95); padding: 20px 30px; border-radius: 20px; font-weight: 600; color: #1b5e20; z-index: 5; text-align: center; border: 3px solid #2e7d32; }
+        .komik-loading.hidden { display: none; }
+        .komik-btn { font-family: 'Fredoka', sans-serif; padding: 14px 32px; border-radius: 40px; border: none; font-weight: 600; font-size: 1.05rem; cursor: pointer; transition: all 0.12s ease; }
+        .komik-btn.fullscreen { background: linear-gradient(180deg, #a5d6a7 0%, #66bb6a 100%); color: #1b5e20; border: 3px solid #2e7d32; box-shadow: 0 6px 0 #1b5e20; }
+        .komik-btn.finish { background: linear-gradient(180deg, #ffe082 0%, #ffb300 100%); color: #4e2e00; border: 4px solid #e65100; font-size: 1.2rem; padding: 16px 44px; box-shadow: 0 8px 0 #bf360c; }
+        .komik-checklist { background: rgba(255, 254, 245, 0.95); border-radius: 24px; padding: 18px 24px; border: 3px dashed #ffb300; box-shadow: 0 5px 0 #ff8f00; }
+        .komik-checklist h4 { font-family: 'Fredoka', sans-serif; color: #e65100; margin-bottom: 12px; text-align: center; font-weight: 600; font-size: 1.05rem; }
+        .komik-checklist label { font-family: 'Nunito', sans-serif; display: flex; align-items: flex-start; gap: 12px; font-size: 0.9rem; color: #4e342e; padding: 8px 0; cursor: pointer; font-weight: 700; }
+
+        .mystery-header { width: 100%; display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; background: linear-gradient(180deg, #ffe082 0%, #ffb300 100%); padding: 16px 24px; border-radius: 30px; border: 4px solid #e65100; margin-bottom: 22px; box-shadow: 0 8px 0 #bf360c; }
+        .mystery-header .stat-box { font-family: 'Fredoka', sans-serif; display: flex; align-items: center; gap: 8px; background: linear-gradient(180deg, #ffffff, #f8fff0); padding: 10px 20px; border-radius: 40px; font-weight: 600; color: #1b5e20; font-size: 0.95rem; box-shadow: 0 4px 0 #43a047; }
+        .mystery-header .stat-box .num { color: #e65100; font-size: 1.25rem; font-weight: 700; }
+        .mystery-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; width: 100%; max-width: 720px; margin: 0 auto 22px; }
+        .mystery-box { aspect-ratio: 1 / 1; border-radius: 18px; border: 4px solid #e65100; background: linear-gradient(180deg, #ffe082 0%, #ffb300 50%, #ff8f00 100%); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 700; color: #4e2e00; box-shadow: 0 7px 0 #bf360c; transition: all 0.12s ease; user-select: none; position: relative; overflow: hidden; }
+        .mystery-box::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: linear-gradient(45deg, transparent, rgba(255,255,255,0.5), transparent); transform: rotate(45deg); animation: mysteryShine 3s linear infinite; pointer-events: none; }
+        @keyframes mysteryShine { 0% { transform: translateX(-100%) rotate(45deg); } 100% { transform: translateX(100%) rotate(45deg); } }
+        .mystery-box:hover:not(.opened) { transform: translateY(-5px) scale(1.05); }
+        .mystery-box.opened { background: linear-gradient(180deg, #a5d6a7 0%, #66bb6a 50%, #43a047 100%); border-color: #1b5e20; color: white; cursor: not-allowed; }
+        .mystery-box.correct { background: linear-gradient(180deg, #a5d6a7 0%, #4caf50 50%, #2e7d32 100%); border-color: #0d3b0e; }
+        .mystery-box.wrong { background: linear-gradient(180deg, #ef9a9a 0%, #ef5350 50%, #c62828 100%); border-color: #8e0000; }
+        .mystery-box .box-icon { font-size: 2rem; z-index: 2; position: relative; }
+        .mystery-box .box-number { font-family: 'Fredoka', sans-serif; position: absolute; top: 6px; right: 10px; font-size: 0.85rem; font-weight: 600; color: #fff; background: linear-gradient(180deg, #d32f2f, #b71c1c); padding: 3px 10px; border-radius: 20px; z-index: 3; }
+        .mystery-info { font-family: 'Nunito', sans-serif; background: rgba(255, 255, 255, 0.9); border-radius: 22px; padding: 14px 22px; text-align: center; color: #1b5e20; font-size: 0.92rem; font-weight: 700; border: 3px solid #66bb6a; width: 100%; max-width: 720px; margin: 0 auto; box-shadow: 0 5px 0 #43a047; }
+        .mystery-finish-wrapper { text-align: center; width: 100%; margin-top: 22px; }
+        .mystery-finish-btn { font-family: 'Fredoka', sans-serif; padding: 18px 54px; border-radius: 50px; border: 5px solid #e65100; background: linear-gradient(180deg, #ffe082 0%, #ffb300 50%, #ff8f00 100%); color: #4e2e00; font-weight: 600; font-size: 1.35rem; letter-spacing: 2px; cursor: pointer; box-shadow: 0 10px 0 #bf360c; transition: all 0.12s ease; animation: finishPulse 2s ease-in-out infinite; display: inline-block; text-transform: uppercase; }
+        .mystery-finish-btn:hover { transform: translateY(-3px); }
+        @keyframes finishPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
+        .mystery-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 2500; justify-content: center; align-items: center; padding: 20px; }
+        .mystery-modal-overlay.show { display: flex; }
+        .mystery-modal { background: linear-gradient(180deg, #ffffff 0%, #fff8e1 100%); border: 6px solid #ffb300; border-radius: 30px; padding: 30px 34px; max-width: 650px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 12px 0 #e65100, 0 20px 50px rgba(0, 0, 0, 0.5); animation: pop 0.4s ease-out; position: relative; }
+        .mystery-modal .close-x { position: absolute; top: 14px; right: 20px; font-size: 1.9rem; background: none; border: none; cursor: pointer; color: #795548; font-weight: 900; z-index: 10; }
+        .mystery-modal .q-label { font-family: 'Fredoka', sans-serif; display: inline-block; background: linear-gradient(180deg, #ffe082, #ffb300); color: #4e2e00; padding: 6px 18px; border-radius: 20px; font-weight: 600; font-size: 0.88rem; margin-bottom: 14px; border: 3px solid #e65100; box-shadow: 0 3px 0 #bf360c; }
+        .mystery-modal .q-text { font-family: 'Nunito', sans-serif; font-size: 1.08rem; font-weight: 700; color: #1b5e20; margin-bottom: 22px; line-height: 1.6; }
+        .mystery-modal .options { display: flex; flex-direction: column; gap: 12px; }
+        .mystery-modal .option-btn { font-family: 'Nunito', sans-serif; display: flex; align-items: center; gap: 14px; padding: 14px 20px; border-radius: 16px; border: 3px solid #a5d6a7; background: linear-gradient(180deg, #ffffff 0%, #f1f8e9 100%); cursor: pointer; text-align: left; font-size: 0.98rem; color: #1b5e20; font-weight: 700; transition: all 0.15s ease; width: 100%; box-shadow: 0 4px 0 #66bb6a; }
+        .mystery-modal .option-btn:hover:not(:disabled) { background: linear-gradient(180deg, #c8e6c9 0%, #a5d6a7 100%); border-color: #2e7d32; transform: translateX(6px); }
+        .mystery-modal .option-btn:disabled { cursor: not-allowed; }
+        .mystery-modal .option-btn .opt-label { font-family: 'Fredoka', sans-serif; background: linear-gradient(180deg, #66bb6a, #43a047); color: white; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; flex-shrink: 0; box-shadow: 0 3px 0 #1b5e20; }
+        .mystery-modal .option-btn.selected-correct { background: linear-gradient(180deg, #a5d6a7 0%, #66bb6a 100%); border-color: #2e7d32; }
+        .mystery-modal .option-btn.selected-wrong { background: linear-gradient(180deg, #ef9a9a 0%, #ef5350 100%); border-color: #b71c1c; color: #ffffff; }
+        .mystery-modal .option-btn.reveal-correct { background: linear-gradient(180deg, #a5d6a7 0%, #66bb6a 100%); border-color: #2e7d32; box-shadow: 0 0 0 4px #4caf50, 0 6px 0 #1b5e20; }
+        .mystery-modal .feedback-area { font-family: 'Fredoka', sans-serif; margin-top: 20px; padding: 16px 20px; border-radius: 20px; text-align: center; font-weight: 600; font-size: 1.05rem; min-height: 30px; display: none; }
+        .mystery-modal .feedback-area.show { display: block; }
+        .mystery-modal .feedback-area.correct { background: linear-gradient(180deg, #c8e6c9 0%, #a5d6a7 100%); color: #1b5e20; border: 3px solid #2e7d32; }
+        .mystery-modal .feedback-area.wrong { background: linear-gradient(180deg, #ffcdd2 0%, #ef9a9a 100%); color: #b71c1c; border: 3px solid #c62828; }
+        .mystery-modal .btn-next { font-family: 'Fredoka', sans-serif; margin: 18px auto 0; padding: 14px 40px; border-radius: 40px; border: 4px solid #e65100; background: linear-gradient(180deg, #ffe082, #ffb300); color: #4e2e00; font-weight: 600; font-size: 1.08rem; cursor: pointer; box-shadow: 0 6px 0 #bf360c; display: none; }
+        .mystery-modal .btn-next.show { display: block; }
+
+        .action-progress { width: 100%; max-width: 760px; margin: 0 auto 22px; background: rgba(255, 255, 255, 0.9); border-radius: 22px; padding: 18px 24px; border: 3px solid #66bb6a; box-shadow: 0 6px 0 #43a047; }
+        .action-progress .progress-info { font-family: 'Fredoka', sans-serif; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 0.95rem; font-weight: 600; color: #1b5e20; }
+        .action-progress .progress-bar-bg { height: 18px; background: linear-gradient(180deg, #e8f5e9, #c8e6c9); border-radius: 10px; overflow: hidden; border: 2px solid #a5d6a7; }
+        .action-progress .progress-bar-fill { height: 100%; background: linear-gradient(180deg, #81c784 0%, #4caf50 50%, #2e7d32 100%); border-radius: 10px; transition: width 0.4s ease; width: 0%; }
+        .action-list { width: 100%; max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+        .action-card { display: flex; align-items: center; gap: 18px; background: rgba(255, 255, 255, 0.92); border-radius: 22px; padding: 18px 22px; border-left: 8px solid #4caf50; box-shadow: 0 5px 0 #66bb6a; transition: all 0.15s ease; cursor: pointer; border-top: 3px solid #a5d6a7; border-right: 3px solid #a5d6a7; border-bottom: 3px solid #a5d6a7; }
+        .action-card:hover { transform: translateX(8px); }
+        .action-card.completed { background: linear-gradient(180deg, #c8e6c9 0%, #a5d6a7 100%); border-left-color: #1b5e20; }
+        .action-card[data-cat="sampah"] { border-left-color: #43a047; }
+        .action-card[data-cat="air"] { border-left-color: #29b6f6; }
+        .action-card[data-cat="listrik"] { border-left-color: #ffb300; }
+        .action-card[data-cat="hijau"] { border-left-color: #66bb6a; }
+        .action-card[data-cat="kompos"] { border-left-color: #8d6e63; }
+        .action-card[data-cat="kantin"] { border-left-color: #ff9800; }
+        .action-icon { width: 64px; height: 64px; border-radius: 18px; background: linear-gradient(180deg, #e8f5e9, #c8e6c9); display: flex; align-items: center; justify-content: center; font-size: 2.3rem; flex-shrink: 0; box-shadow: 0 4px 0 #66bb6a; }
+        .action-info { flex: 1; text-align: left; min-width: 0; }
+        .action-title { font-family: 'Fredoka', sans-serif; font-size: 1.15rem; font-weight: 600; color: #1b5e20; margin-bottom: 5px; }
+        .action-meta { font-family: 'Nunito', sans-serif; font-size: 0.88rem; color: #2e7d32; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-weight: 700; }
+        .action-meta .level { font-family: 'Fredoka', sans-serif; background: linear-gradient(180deg, #e8f5e9, #c8e6c9); padding: 3px 12px; border-radius: 12px; font-size: 0.78rem; font-weight: 600; color: #2e7d32; box-shadow: 0 2px 0 #66bb6a; }
+        .action-reward { text-align: right; flex-shrink: 0; }
+        .action-reward .points { font-family: 'Fredoka', sans-serif; font-size: 1.35rem; font-weight: 600; color: #2e7d32; }
+        .action-reward .points-label { font-family: 'Nunito', sans-serif; font-size: 0.72rem; color: #666; display: block; font-weight: 700; }
+        .action-check { width: 38px; height: 38px; border-radius: 10px; border: 3px solid #a5d6a7; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; transition: all 0.2s ease; color: transparent; background: linear-gradient(180deg, #ffffff, #f1f8e9); }
+        .action-card.completed .action-check { background: linear-gradient(180deg, #66bb6a, #43a047); border-color: #1b5e20; color: white; }
+        .action-detail-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.65); backdrop-filter: blur(4px); z-index: 2600; justify-content: center; align-items: center; padding: 16px; }
+        .action-detail-overlay.show { display: flex; }
+        .action-detail-box { background: linear-gradient(180deg, #ffffff 0%, #f0f9e8 100%); border-radius: 30px; max-width: 640px; width: 100%; max-height: 92vh; overflow-y: auto; box-shadow: 0 12px 0 #43a047; animation: pop 0.35s ease-out; position: relative; border: 4px solid #66bb6a; }
+        .action-detail-header { padding: 26px 30px 18px; border-bottom: 3px solid #e8f5e9; position: sticky; top: 0; background: linear-gradient(180deg, #ffffff 0%, #f8fff0 100%); z-index: 2; border-radius: 26px 26px 0 0; }
+        .action-detail-header h3 { font-family: 'Fredoka', sans-serif; font-size: 1.4rem; color: #1b5e20; font-weight: 600; }
+        .action-detail-close { position: absolute; top: 22px; right: 22px; width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(180deg, #ef5350, #c62828); border: 3px solid #8e0000; font-size: 1.3rem; cursor: pointer; color: #ffffff; display: flex; align-items: center; justify-content: center; font-weight: 900; box-shadow: 0 4px 0 #6d0000; }
+        .action-detail-body { padding: 22px 30px 30px; }
+        .action-detail-badge { display: flex; align-items: center; gap: 18px; background: linear-gradient(180deg, #e8f5e9 0%, #c8e6c9 100%); border-radius: 20px; padding: 18px 22px; margin-bottom: 22px; border: 3px solid #66bb6a; box-shadow: 0 5px 0 #43a047; }
+        .action-detail-badge .big-icon { font-size: 3.2rem; flex-shrink: 0; }
+        .action-detail-badge .info h4 { font-family: 'Fredoka', sans-serif; font-size: 1.15rem; color: #1b5e20; font-weight: 600; }
+        .action-detail-badge .info .lvl { font-family: 'Nunito', sans-serif; font-size: 0.88rem; color: #2e7d32; font-weight: 700; }
+        .action-detail-badge .info .reward { font-family: 'Fredoka', sans-serif; font-size: 1.05rem; color: #2e7d32; font-weight: 600; }
+        .action-detail-section { margin-bottom: 22px; }
+        .action-detail-section h5 { font-family: 'Fredoka', sans-serif; font-size: 1.05rem; color: #1b5e20; margin-bottom: 12px; font-weight: 600; }
+        .action-detail-section p { font-family: 'Nunito', sans-serif; font-size: 0.95rem; color: #2e7d32; line-height: 1.65; font-weight: 700; }
+        .action-steps { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
+        .action-step { font-family: 'Nunito', sans-serif; display: flex; align-items: center; gap: 14px; font-size: 0.95rem; color: #2e7d32; line-height: 1.5; cursor: pointer; padding: 12px 16px; border-radius: 14px; transition: all 0.15s ease; border: 3px solid transparent; background: linear-gradient(180deg, #ffffff, #f8fff0); font-weight: 700; box-shadow: 0 3px 0 #e8f5e9; }
+        .action-step:hover { background: linear-gradient(180deg, #f1f8e9, #e8f5e9); }
+        .action-step .step-num { font-family: 'Fredoka', sans-serif; width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(180deg, #66bb6a, #43a047); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.88rem; flex-shrink: 0; box-shadow: 0 3px 0 #1b5e20; }
+        .action-step .step-check { width: 26px; height: 26px; border-radius: 8px; border: 3px solid #a5d6a7; display: flex; align-items: center; justify-content: center; color: transparent; font-size: 1rem; flex-shrink: 0; margin-left: auto; transition: all 0.2s ease; background: #ffffff; }
+        .action-step.checked { background: linear-gradient(180deg, #c8e6c9, #a5d6a7); border-color: #66bb6a; }
+        .action-step.checked .step-check { background: linear-gradient(180deg, #66bb6a, #43a047); border-color: #1b5e20; color: white; }
+        .action-step.checked .step-text { text-decoration: line-through; color: #1b5e20; }
+        .action-detail-btn { font-family: 'Fredoka', sans-serif; width: 100%; padding: 16px; border-radius: 50px; border: 4px solid #e65100; background: linear-gradient(180deg, #ffe082 0%, #ffb300 100%); color: #4e2e00; font-weight: 600; font-size: 1.15rem; cursor: pointer; box-shadow: 0 8px 0 #bf360c; transition: all 0.12s ease; margin-top: 10px; }
+        .action-detail-btn:active { transform: translateY(5px); }
+        .action-detail-btn:disabled { background: linear-gradient(180deg, #e0e0e0, #bdbdbd); border-color: #9e9e9e; color: #757575; box-shadow: 0 8px 0 #9e9e9e; cursor: not-allowed; }
+
+        .badge-popup-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.75); z-index: 5000; justify-content: center; align-items: center; padding: 20px; opacity: 0; transition: opacity 0.4s ease; }
+        .badge-popup-overlay.show { display: flex; opacity: 1; }
+        .badge-popup-box { background: linear-gradient(180deg, #fffef5 0%, #fff8e1 50%, #ffecb3 100%); border: 8px solid #ffb300; border-radius: 40px; padding: 40px 44px; max-width: 480px; width: 100%; text-align: center; box-shadow: 0 15px 0 #e65100, 0 28px 60px rgba(0, 0, 0, 0.6); animation: badgePopIn 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55); position: relative; }
+        @keyframes badgePopIn { 0% { transform: scale(0.3) rotate(-15deg); opacity: 0; } 50% { transform: scale(1.1) rotate(5deg); } 100% { transform: scale(1) rotate(0deg); opacity: 1; } }
+        .badge-popup-icon { font-size: 5.5rem; display: block; margin-bottom: 10px; animation: badgeFloat 2s ease-in-out infinite; }
+        @keyframes badgeFloat { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-12px) scale(1.1); } }
+        .badge-popup-title { font-family: 'Fredoka', sans-serif; color: #e65100; font-size: 1.3rem; font-weight: 600; letter-spacing: 4px; margin-bottom: 10px; text-transform: uppercase; }
+        .badge-popup-name { font-family: 'Fredoka', sans-serif; color: #1b5e20; font-size: 1.7rem; font-weight: 600; background: linear-gradient(180deg, #ffffff 0%, #f0f9e8 100%); padding: 12px 28px; border-radius: 50px; display: inline-block; margin: 10px 0 18px; border: 4px solid #66bb6a; box-shadow: 0 5px 0 #43a047; }
+        .badge-popup-desc { font-family: 'Nunito', sans-serif; color: #4e342e; font-size: 1rem; font-weight: 700; margin-bottom: 18px; line-height: 1.55; }
+        .badge-popup-xp { font-family: 'Fredoka', sans-serif; background: linear-gradient(180deg, #66bb6a 0%, #43a047 50%, #2e7d32 100%); color: white; padding: 10px 28px; border-radius: 40px; font-size: 1.3rem; font-weight: 600; display: inline-block; margin-bottom: 22px; border: 3px solid #1b5e20; box-shadow: 0 5px 0 #0d3b0e; }
+        .badge-popup-btn { font-family: 'Fredoka', sans-serif; display: block; margin: 0 auto; padding: 16px 44px; border-radius: 50px; border: 4px solid #e65100; background: linear-gradient(180deg, #ffe082 0%, #ffb300 100%); color: #4e2e00; font-weight: 600; font-size: 1.15rem; cursor: pointer; box-shadow: 0 7px 0 #bf360c; transition: all 0.12s ease; }
+        .badge-popup-btn:active { transform: translateY(5px); }
+        .badge-popup-btn:hover { background: linear-gradient(180deg, #ffecb3 0%, #ffca28 100%); }
+
+        .badge-collection { display: none; margin-top: 22px; padding: 20px 24px; text-align: center; background: rgba(255, 255, 255, 0.85); border-radius: 24px; border: 3px solid #66bb6a; box-shadow: 0 6px 0 #43a047; }
+        .badge-collection.show { display: block; }
+        .badge-collection h3 { font-family: 'Fredoka', sans-serif; color: #1b5e20; margin-bottom: 14px; font-weight: 600; font-size: 1.15rem; }
+        .badge-collection .badges { display: flex; justify-content: center; gap: 18px; flex-wrap: wrap; }
+        .badge-collection .badge-item { font-size: 2.6rem; opacity: 0.3; filter: grayscale(1); transition: all 0.3s ease; }
+        .badge-collection .badge-item.unlocked { opacity: 1; filter: grayscale(0) drop-shadow(0 4px 8px rgba(255, 179, 0, 0.5)); animation: pop 0.3s ease-out; }
+        .badge-collection .badge-item .bname { font-family: 'Fredoka', sans-serif; display: block; font-size: 0.65rem; color: #2e7d32; font-weight: 600; margin-top: 4px; }
+        .certificate-btn-wrapper { display: none; margin-top: 20px; text-align: center; }
+        .certificate-btn-wrapper.show { display: block; }
+        .btn-certificate { font-family: 'Fredoka', sans-serif; background: linear-gradient(180deg, #ffe082 0%, #ffb300 50%, #ff8f00 100%); border: 5px solid #e65100; border-radius: 60px; padding: 18px 46px; font-size: 1.5rem; font-weight: 600; color: #4e2e00; cursor: pointer; box-shadow: 0 10px 0 #bf360c; transition: all 0.12s ease; }
+        .btn-certificate:hover { transform: translateY(-3px); }
+        .btn-certificate:active { transform: translateY(6px); }
+
+        .name-alert-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.65); z-index: 2000; justify-content: center; align-items: center; padding: 20px; }
+        .name-alert-overlay.show { display: flex; }
+        .name-alert-box { background: linear-gradient(180deg, #ffffff 0%, #fff8e1 100%); border: 8px solid #ffb300; border-radius: 36px; padding: 34px 40px; max-width: 500px; width: 100%; text-align: center; box-shadow: 0 14px 0 #e65100; }
+        .name-alert-box .alert-emoji { font-size: 4.5rem; display: block; }
+        .name-alert-box h3 { font-family: 'Fredoka', sans-serif; color: #c62828; font-size: 1.6rem; margin-bottom: 14px; font-weight: 600; }
+        .name-alert-box p { font-family: 'Nunito', sans-serif; color: #4e342e; font-size: 1.1rem; margin-bottom: 22px; background: linear-gradient(180deg, #fff3cd, #ffe082); padding: 14px 20px; border-radius: 20px; font-weight: 700; border: 3px solid #ffb300; }
+        .name-alert-box .btn-ok { font-family: 'Fredoka', sans-serif; background: linear-gradient(180deg, #ffe082, #ffb300); border: 4px solid #e65100; border-radius: 50px; padding: 14px 44px; font-size: 1.2rem; font-weight: 600; color: #4e2e00; cursor: pointer; box-shadow: 0 7px 0 #bf360c; }
+        .name-alert-box .btn-ok:active { transform: translateY(5px); }
+        @keyframes pop { 0% { transform: scale(0.6); opacity: 0; } 70% { transform: scale(1.08); } 100% { transform: scale(1); opacity: 1; } }
+        .download-notification { font-family: 'Nunito', sans-serif; position: fixed; bottom: 30px; right: 30px; background: linear-gradient(180deg, #43a047 0%, #1b5e20 100%); color: white; padding: 20px 28px; border-radius: 22px; z-index: 3000; border: 4px solid #ffb300; max-width: 360px; display: flex; align-items: center; gap: 16px; transform: translateX(480px); opacity: 0; transition: all 0.4s ease; font-weight: 700; box-shadow: 0 8px 0 #0d3b0e; }
+        .download-notification.show { transform: translateX(0); opacity: 1; }
+
+        .certificate-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.75); z-index: 1000; justify-content: center; align-items: center; padding: 16px; }
+        .certificate-overlay.show { display: flex; }
+        .certificate-box { background: #fdfdf5; border: 6px solid #1b5e20; border-radius: 18px; padding: 0; max-width: 900px; width: 100%; position: relative; overflow: hidden; box-shadow: 0 16px 0 #0d3b0e, 0 30px 60px rgba(0, 0, 0, 0.6); animation: pop 0.4s ease-out; }
+        .certificate-inner { position: relative; padding: 28px 40px 32px; background: radial-gradient(circle at 10% 90%, rgba(46,125,50,0.08) 0%, transparent 40%), radial-gradient(circle at 90% 10%, rgba(46,125,50,0.08) 0%, transparent 40%), #fdfdf5; border-radius: 12px; margin: 10px; border: 2px solid #c8a44a; box-shadow: inset 0 0 0 6px #fdfdf5, inset 0 0 0 8px #2e7d32; overflow: hidden; }
+        .cert-leaf { position: absolute; font-size: 5rem; opacity: 0.15; pointer-events: none; user-select: none; line-height: 1; }
+        .cert-leaf.tl { top: -10px; left: -10px; transform: rotate(-20deg); }
+        .cert-leaf.tr { top: -10px; right: -10px; transform: rotate(20deg) scaleX(-1); }
+        .cert-leaf.bl { bottom: -10px; left: -10px; transform: rotate(20deg) scaleY(-1); }
+        .cert-leaf.br { bottom: -10px; right: -10px; transform: rotate(-20deg) scale(-1,-1); }
+        .cert-header-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 6px; }
+        .cert-header-row .cert-logo-left, .cert-header-row .cert-logo-right { width: 90px; height: 90px; object-fit: contain; flex-shrink: 0; border-radius: 50%; background: #fff; padding: 2px; }
+        .cert-title-block { text-align: center; flex: 1; }
+        .cert-title-block h1 { font-family: 'Georgia', 'Times New Roman', serif; font-size: clamp(1.6rem, 4vw, 2.6rem); color: #1b5e20; letter-spacing: 2px; font-weight: 900; margin-bottom: 2px; text-transform: uppercase; }
+        .cert-title-block .cert-subtitle { font-family: 'Georgia', serif; font-size: clamp(1rem, 2.5vw, 1.6rem); color: #2e7d32; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; }
+        .cert-divider { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 4px 0 12px; }
+        .cert-divider .line { flex: 1; height: 2px; background: linear-gradient(90deg, transparent, #c8a44a, transparent); max-width: 200px; }
+        .cert-divider .diamond { color: #c8a44a; font-size: 0.8rem; }
+        .cert-given { font-family: 'Nunito', sans-serif; text-align: center; font-size: 1rem; color: #4e342e; font-weight: 600; margin-bottom: 6px; }
+        .cert-name-box { background: #ffffff; border: 2px solid #c8a44a; border-radius: 10px; padding: 10px 20px; margin: 0 auto 12px; max-width: 560px; text-align: center; position: relative; }
+        .cert-name-box .name { font-family: 'Georgia', serif; font-size: clamp(1.4rem, 3vw, 2rem); font-weight: 900; color: #1b5e20; letter-spacing: 1px; }
+        .cert-name-box .name-ornament { position: absolute; top: 50%; transform: translateY(-50%); font-size: 1.2rem; color: #2e7d32; opacity: 0.7; }
+        .cert-name-box .name-ornament.left { left: 10px; }
+        .cert-name-box .name-ornament.right { right: 10px; }
+        .cert-congrats { font-family: 'Georgia', serif; text-align: center; font-size: clamp(0.9rem, 1.8vw, 1.15rem); font-weight: 900; color: #1b5e20; letter-spacing: 1px; margin: 8px 0 6px; text-transform: uppercase; }
+        .cert-desc { font-family: 'Nunito', sans-serif; text-align: center; font-size: clamp(0.75rem, 1.3vw, 0.9rem); color: #4e342e; line-height: 1.6; max-width: 640px; margin: 0 auto 12px; padding: 0 10px; }
+        .cert-date-line { font-family: 'Nunito', sans-serif; text-align: center; font-size: clamp(0.8rem, 1.4vw, 0.95rem); color: #4e342e; margin-bottom: 0; line-height: 1.4; }
+        .cert-date-line #certDate { font-weight: 600; color: #1b5e20; }
+        .cert-signature-block { text-align: center; margin-top: 0; }
+        .cert-signature-block .jabatan { font-family: 'Nunito', sans-serif; font-size: clamp(0.8rem, 1.4vw, 0.95rem); color: #4e342e; margin-bottom: 0; line-height: 1.2; }
+        .cert-signature-block .sig-space { display: block; height: 75px; width: 100%; }
+        .cert-signature-block .sig-line { width: 260px; height: 2px; background: #c8a44a; margin: 0 auto 8px; }
+        .cert-signature-block .nama-kepsek { font-family: 'Georgia', serif; font-size: clamp(0.9rem, 1.6vw, 1.1rem); font-weight: 900; color: #1b5e20; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+        .cert-signature-block .nip { font-family: 'Nunito', sans-serif; font-size: clamp(0.75rem, 1.2vw, 0.9rem); color: #4e342e; margin-top: 0; }
+        .cert-badges-row { text-align: center; font-size: clamp(1.2rem, 2.5vw, 1.8rem); letter-spacing: 6px; margin-top: 10px; color: #c8a44a; }
+        .cert-actions { margin-top: 18px; display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
+        .btn-print, .btn-download { font-family: 'Fredoka', sans-serif; border-radius: 60px; padding: 14px 32px; font-size: 1.05rem; font-weight: 600; color: #fff; cursor: pointer; transition: all 0.12s ease; }
+        .btn-print { background: linear-gradient(180deg, #66bb6a 0%, #43a047 50%, #2e7d32 100%); border: 4px solid #0d3b0e; box-shadow: 0 7px 0 #0d3b0e; }
+        .btn-download { background: linear-gradient(180deg, #ff8a65 0%, #ff5722 50%, #e64a19 100%); border: 4px solid #bf360c; box-shadow: 0 7px 0 #8d2b00; }
+        .btn-eco-clash-cert { font-family: 'Fredoka', sans-serif; border-radius: 60px; padding: 14px 32px; font-size: 1.05rem; font-weight: 600; color: #ffffff; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 10px; letter-spacing: 2px; text-transform: uppercase; background: linear-gradient(180deg, #66bb6a 0%, #43a047 50%, #2e7d32 100%); border: 4px solid #0d3b0e; box-shadow: 0 7px 0 #0d3b0e; transition: all 0.12s ease; }
+        .btn-eco-clash-cert:hover { transform: translateY(-3px); }
+        .certificate-box .close-btn { position: absolute; top: 12px; right: 18px; font-size: 1.8rem; cursor: pointer; color: #795548; background: rgba(255,255,255,0.95); border: 3px solid #8d6e63; font-weight: 900; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; z-index: 20; box-shadow: 0 4px 0 #4e342e; }
+
+        @media print {
+            body * { visibility: hidden; }
+            html, body { width: 100% !important; height: 100% !important; margin: 0 !important; padding: 0 !important; background: white !important; overflow: hidden !important; display: block !important; position: static !important; }
+            .certificate-overlay, .certificate-overlay * { visibility: visible; }
+            .certificate-overlay { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; height: 100% !important; background: white !important; display: flex !important; justify-content: center !important; align-items: center !important; padding: 0 !important; margin: 0 !important; }
+            .certificate-box { width: 287mm !important; height: 200mm !important; background: #fdfdf5 !important; border: 4px solid #1b5e20 !important; padding: 0 !important; box-shadow: none !important; margin: 0 auto !important; overflow: hidden !important; }
+            .certificate-inner { width: 100% !important; height: 100% !important; padding: 8mm 12mm !important; border: 1px solid #c8a44a !important; margin: 4mm !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; }
+            .certificate-box .close-btn, .certificate-box .cert-actions { display: none !important; }
+            .certificate-box, .certificate-box * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            @page { size: A4 landscape; margin: 5mm; }
+        }
+        @media (max-width: 750px) {
+            .game-container { padding: 18px; }
+            .header { flex-direction: column; align-items: stretch; gap: 10px; }
+            .header-logo { width: 44px; height: 44px; padding: 2px; }
+            .header-left h1 { font-size: 1.3rem; }
+            .city-canvas { height: 440px; max-width: 100%; }
+            #musicBtn { width: 52px; height: 52px; font-size: 1.5rem; top: 12px; left: 12px; }
+            #homeFloatingBtn { width: 52px; height: 52px; font-size: 1.5rem; bottom: 12px; right: 12px; }
+            .cover-missions-grid { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+            .wooden-sign { padding: 14px 24px; }
+            .wooden-sign .sign-text { letter-spacing: 2px; }
+            .btn-start-adventure { padding: 16px 40px; font-size: 1.1rem; }
+            .cert-signature-block .sig-space { height: 60px; }
+            .cover-title-panel { padding: 18px 28px 14px; border-radius: 24px; }
+        }
+        @media (max-width: 480px) {
+            .game-container { padding: 12px; }
+            .header-logo { width: 38px; height: 38px; padding: 2px; }
+            .header-left h1 { font-size: 1rem; letter-spacing: 1px; }
+            .header-brand { gap: 8px; }
+            .city-canvas { height: 380px; max-width: 100%; }
+            .wooden-sign { padding: 12px 18px; font-size: 0.9rem; letter-spacing: 1px; }
+            .wooden-sign .sign-text { letter-spacing: 1px; }
+            .wooden-sign .leaf-icon { font-size: 1.1em; margin: 0 4px; }
+            .btn-start-adventure { padding: 14px 30px; font-size: 0.95rem; letter-spacing: 2px; }
+            .cert-signature-block .sig-space { height: 50px; }
+            .cover-title-panel { padding: 14px 18px 12px; border-radius: 20px; border-width: 3px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- MUSIK BACKGROUND - SLOW, TENANG, ENAK DIDENGAR -->
+<audio id="bgMusic" loop preload="auto">
+    <source src="https://cdn.pixabay.com/audio/2023/05/03/audio_a01da2a7a6.mp3" type="audio/mpeg">
+    <source src="https://cdn.pixabay.com/audio/2022/11/22/audio_91e5b7b3a9.mp3" type="audio/mpeg">
+    <source src="https://github.com/rafaelreis-hotmart/Audio-Sample-files/raw/master/sample.mp3" type="audio/mpeg">
+</audio>
+
+<button id="musicBtn" title="Musik ON/OFF">
+    <span id="musicIcon">🔇</span>
+</button>
+
+<button id="homeFloatingBtn" title="Kembali ke Beranda">🏠</button>
+
+<img id="bgImage" src="https://i.ibb.co.com/B2Ldn6bT/NEW-BACKGROUND-ECO-SPENSASED.png" alt="" />
+<div id="bgOverlay"></div>
+
+<div class="game-container" id="app">
+    <div id="coverPage">
+        <div class="cover-logo-container">
+            <img src="https://lh3.googleusercontent.com/d/1ivSFgxC3e_2CySJmF_A09kmUnIRGBW4k" alt="Logo ECO SPENSASED" />
+        </div>
+        
+        <!-- PANEL JUDUL: subjudul di BAWAH judul, keduanya center -->
+        <div class="cover-title-panel">
+            <h1 class="cover-title">ECO SPENSASED</h1>
+            <p class="cover-subtitle">🌿 Pahlawan Lingkungan 🌿</p>
+        </div>
+        
+        <div class="cover-divider">
+            <span class="line"></span>
+            <span class="leaf-emoji">🌱</span>
+            <span class="leaf-emoji">♻️</span>
+            <span class="leaf-emoji">🌍</span>
+            <span class="line"></span>
+        </div>
+        <div class="cover-description">
+            Selamat datang, calon <strong>Pahlawan Bumi</strong>! 🌍<br>
+            Selesaikan <strong>7 misi seru</strong> tentang lingkungan untuk menyelamatkan bumi kita!
+        </div>
+        <h3 class="cover-missions-title">
+            <span class="title-deco">📋</span> Daftar Misi Petualangan <span class="title-deco">📋</span>
+        </h3>
+        <div class="cover-missions-grid">
+            <div class="cover-mission-card" data-misi="1"><span class="mission-num">MISI 1</span><div class="cmc-icon">🗑️</div><div class="cmc-content"><div class="cmc-title">Pilah Sampah</div><div class="cmc-desc">Seret sampah ke tempat yang benar: Organik, Anorganik, atau B3.</div></div></div>
+            <div class="cover-mission-card" data-misi="2"><span class="mission-num">MISI 2</span><div class="cmc-icon">🌿</div><div class="cmc-content"><div class="cmc-title">Pahlawan Kompos</div><div class="cmc-desc">Pilih 5 bahan organik dan olah menjadi kompos yang menyuburkan.</div></div></div>
+            <div class="cover-mission-card" data-misi="3"><span class="mission-num">MISI 3</span><div class="cmc-icon">🏙️</div><div class="cmc-content"><div class="cmc-title">Bangun Kota Hijau</div><div class="cmc-desc">Susun elemen kota agar alam lebih dominan daripada polusi.</div></div></div>
+            <div class="cover-mission-card" data-misi="4"><span class="mission-num">MISI 4</span><div class="cmc-icon">🧮</div><div class="cmc-content"><div class="cmc-title">Kalkulator Sampah</div><div class="cmc-desc">Hitung total sampah harian, mingguan, dan bulanan sekolahmu.</div></div></div>
+            <div class="cover-mission-card" data-misi="5"><span class="mission-num">MISI 5</span><div class="cmc-icon">📚</div><div class="cmc-content"><div class="cmc-title">Komik LINTAS</div><div class="cmc-desc">Baca komik interaktif tentang literasi & numerasi lingkungan.</div></div></div>
+            <div class="cover-mission-card" data-misi="6"><span class="mission-num">MISI 6</span><div class="cmc-icon">🎁</div><div class="cmc-content"><div class="cmc-title">Mystery Box Adiwiyata</div><div class="cmc-desc">Jawab tantangan soal Adiwiyata dengan membuka kotak misteri.</div></div></div>
+            <div class="cover-mission-card" data-misi="7"><span class="mission-num">MISI 7</span><div class="cmc-icon">🌟</div><div class="cmc-content"><div class="cmc-title">Aksi Nyata</div><div class="cmc-desc">Lakukan 5 tantangan aksi lingkungan nyata di sekitarmu.</div></div></div>
+        </div>
+        <div class="cover-features">
+            <div class="cover-feature-item"><span class="feat-icon">🏅</span><span>7 Badge</span></div>
+            <div class="cover-feature-item"><span class="feat-icon">⭐</span><span>XP Reward</span></div>
+            <div class="cover-feature-item"><span class="feat-icon">🎓</span><span>Sertifikat</span></div>
+        </div>
+        <button type="button" class="btn-start-adventure" id="startAdventureBtn">
+            <span class="btn-text">🚀 MULAI PETUALANGAN</span>
+        </button>
+        <div class="bonus-game-section">
+            <div class="bonus-game-card">
+                <div class="bonus-game-header">
+                    <span class="bonus-game-logo">🌿</span>
+                    <div class="bonus-game-name">ECO <span class="clash-tag">CLASH</span></div>
+                    <span class="bonus-game-logo">🌱</span>
+                </div>
+                <div style="text-align:center;"><span class="bonus-game-badge">🎮 GAME BONUS</span></div>
+                <p class="bonus-game-desc">Tantangan Seru Adu Strategi dan Pengetahuan untuk Menyelesaikan Masalah Lingkungan</p>
+                <div class="bonus-game-levels">
+                    <div class="bonus-level-item" data-level="1"><span class="stars">⭐</span><span class="lvl-name">Beginner</span><span class="lvl-desc">Soal dasar lingkungan & Adiwiyata</span></div>
+                    <div class="bonus-level-item" data-level="2"><span class="stars">⭐⭐</span><span class="lvl-name">Amateur</span><span class="lvl-desc">Soal literasi & numerasi bertema lingkungan</span></div>
+                    <div class="bonus-level-item" data-level="3"><span class="stars">⭐⭐⭐</span><span class="lvl-name">Pro</span><span class="lvl-desc">Studi kasus lingkungan & solusi nyata</span></div>
+                </div>
+                <div style="text-align:center;">
+                    <a href="https://winduwidagdo-maker.github.io/ECO-CLASH/" target="_blank" rel="noopener noreferrer" class="btn-eco-clash">🌿 MAIN ECO CLASH 🌿</a>
+                </div>
+            </div>
+        </div>
+        <div class="bonus-game-section">
+            <div class="bonus-game-card">
+                <div class="bonus-game-header">
+                    <span class="bonus-game-logo">🎲</span>
+                    <div class="bonus-game-name">ECO <span class="clash-tag">BOARD GAME</span></div>
+                    <span class="bonus-game-logo">🎯</span>
+                </div>
+                <div style="text-align:center;"><span class="bonus-game-badge">🎮 GAME BONUS</span></div>
+                <p class="bonus-game-desc">Petualangan Papan Seru dengan Tantangan Lingkungan untuk Menguji Pengetahuan dan Strategimu</p>
+                <div style="text-align:center;">
+                    <a href="https://winduwidagdo-maker.github.io/ECOBOARDGAME/" target="_blank" rel="noopener noreferrer" class="btn-eco-board">🎲 MAIN ECO BOARD GAME 🎲</a>
+                </div>
+            </div>
+        </div>
+        <p class="cover-footer-note" style="margin-top:20px;font-size:0.8rem;color:#1b5e20;font-weight:700;font-style:italic;">✨ Klik tombol di atas untuk memulai petualanganmu! ✨</p>
+    </div>
+
+    <div id="dashboard" style="display:none;">
+        <div class="logo-container"><img src="https://lh3.googleusercontent.com/d/1ivSFgxC3e_2CySJmF_A09kmUnIRGBW4k" alt="Logo" /></div>
+        <div class="input-area">
+            <label for="nameInput">Siapa Namamu?</label>
+            <input type="text" id="nameInput" placeholder="Masukkan nama pahlawan..." maxlength="20" />
+            <button class="btn-start" id="startBtn">🚀 Mulai!</button>
+        </div>
+    </div>
+
+    <div id="gameArea" style="display:none;">
+        <header class="header show">
+            <div class="header-left">
+                <div class="header-brand">
+                    <img src="https://lh3.googleusercontent.com/d/1ivSFgxC3e_2CySJmF_A09kmUnIRGBW4k" alt="Logo" class="header-logo" crossorigin="anonymous" />
+                    <h1>ECO SPENSASED</h1>
+                </div>
+                <span class="tag">♻️ Pahlawan Bumi</span>
+            </div>
+            <div class="header-right">
+                <div class="player-name-area">🦸 <span class="name-label" id="playerNameDisplay">Pahlawan</span></div>
+                <div class="xp-display">⭐ XP: <span id="xpDisplay">0</span></div>
+                <div class="badge-display" id="badgeDisplay">🏅</div>
+            </div>
+        </header>
+
+        <div class="slogan-text show">🌟 <span>Hebat! Kamu benar-benar pahlawan!</span> 🌟</div>
+
+        <div class="wooden-sign-wrapper">
+            <div class="wooden-sign">
+                <span class="leaf-icon">🌿</span>
+                <span class="sign-text">JAGALAH BUMI UNTUK MASA DEPAN</span>
+                <span class="leaf-icon">🌿</span>
+            </div>
+        </div>
+
+        <div class="mission-tabs show" id="missionTabs">
+            <button class="mission-btn active" data-mission="1" id="tab1"><span class="status-icon" id="status1">⬜</span> 🗑️ Misi 1: Pilah Sampah</button>
+            <button class="mission-btn" data-mission="2" id="tab2"><span class="status-icon" id="status2">⬜</span> 🌿 Misi 2: Pahlawan Kompos</button>
+            <button class="mission-btn" data-mission="3" id="tab3"><span class="status-icon" id="status3">⬜</span> 🏙️ Misi 3: Bangun Kota Hijau</button>
+            <button class="mission-btn" data-mission="4" id="tab4"><span class="status-icon" id="status4">⬜</span> 🧮 Misi 4: Kalkulator Sampah</button>
+            <button class="mission-btn" data-mission="5" id="tab5"><span class="status-icon" id="status5">⬜</span> 📚 Misi 5: Komik LINTAS</button>
+            <button class="mission-btn" data-mission="6" id="tab6"><span class="status-icon" id="status6">⬜</span> 🎁 Misi 6: Mystery Box</button>
+            <button class="mission-btn" data-mission="7" id="tab7"><span class="status-icon" id="status7">⬜</span> 🌟 Misi 7: Aksi Nyata</button>
+            <button class="btn-reset" id="resetBtn">🔄 Reset Semua</button>
+        </div>
+
+        <div class="mission-panel show" id="missionPanel"><div id="missionContent"></div></div>
+
+        <div class="badge-collection show" id="badgeCollection">
+            <h3>🏅 Koleksi Badge Kamu</h3>
+            <div class="badges">
+                <div class="badge-item" data-badge="master-pilah">🏅<span class="bname">Master Pilah</span></div>
+                <div class="badge-item" data-badge="petani-kompos">🏅<span class="bname">Petani Kompos</span></div>
+                <div class="badge-item" data-badge="arsitek-hijau">🏅<span class="bname">Arsitek Hijau</span></div>
+                <div class="badge-item" data-badge="ahli-hitung-sampah">🏅<span class="bname">Ahli Hitung Sampah</span></div>
+                <div class="badge-item" data-badge="pembaca-hebat">🏅<span class="bname">Pembaca Hebat</span></div>
+                <div class="badge-item" data-badge="detektif-adiwiyata">🏅<span class="bname">Detektif Adiwiyata</span></div>
+                <div class="badge-item" data-badge="aktivis-adiwiyata">🏅<span class="bname">Aktivis Adiwiyata</span></div>
+            </div>
+        </div>
+
+        <div class="certificate-btn-wrapper" id="certificateBtnWrapper">
+            <button class="btn-certificate" id="certificateBtn">🎓 Lihat Sertifikat</button>
+        </div>
+    </div>
+</div>
+
+<div class="certificate-overlay" id="certificateOverlay">
+    <div class="certificate-box" id="certificateBox">
+        <button class="close-btn" id="closeCertBtn">✕</button>
+        <div class="certificate-inner" id="certificateInner">
+            <span class="cert-leaf tl">🌿</span>
+            <span class="cert-leaf tr">🌿</span>
+            <span class="cert-leaf bl">🌿</span>
+            <span class="cert-leaf br">🌿</span>
+            <div class="cert-header-row">
+                <img class="cert-logo-left" src="https://i.ibb.co.com/Jw89VvXs/Logo-Spensased.png" alt="Logo SMP Negeri 1 Sedati" crossorigin="anonymous" />
+                <div class="cert-title-block">
+                    <h1>SERTIFIKAT APRESIASI</h1>
+                    <div class="cert-subtitle"><span class="leaf-deco">🌿</span> ECO SPENSASED <span class="leaf-deco">🌿</span></div>
+                </div>
+                <img class="cert-logo-right" src="https://lh3.googleusercontent.com/d/1ivSFgxC3e_2CySJmF_A09kmUnIRGBW4k" alt="Logo ECO SPENSASED" crossorigin="anonymous" />
+            </div>
+            <div class="cert-divider"><span class="line"></span><span class="diamond">◆</span><span class="line"></span></div>
+            <div class="cert-given">Diberikan kepada</div>
+            <div class="cert-name-box"><span class="name-ornament left">🌿</span><div class="name" id="certName">Pahlawan</div><span class="name-ornament right">🌿</span></div>
+            <div class="cert-congrats">SELAMAT TELAH MENYELESAIKAN MISI ECO SPENSASED</div>
+            <div class="cert-desc">Sebagai bentuk apresiasi atas partisipasi, kepedulian, dan komitmen dalam menyelesaikan rangkaian misi ECO SPENSASED serta berkontribusi dalam membangun budaya sekolah yang peduli lingkungan, hemat sumber daya, dan berkelanjutan.</div>
+            <div class="cert-date-line">
+                Sidoarjo, <span id="certDate">..............................</span>
+            </div>
+            <div class="cert-signature-block">
+                <div class="jabatan">Kepala SMP Negeri 1 Sedati</div>
+                <div class="sig-space"></div>
+                <div class="sig-line"></div>
+                <div class="nama-kepsek">RATNA DIYAH MUSTIKAWATI, M.Pd.</div>
+                <div class="nip">NIP 197211111994012001</div>
+            </div>
+            <div class="cert-badges-row" id="certBadges">🏅🏅🏅🏅🏅🏅🏅</div>
+            <div class="cert-actions">
+                <button class="btn-download" id="downloadCertBtn">📥 Unduh PDF</button>
+                <button class="btn-print" id="printCertBtn">🖨️ Cetak</button>
+                <a href="https://winduwidagdo-maker.github.io/ECO-CLASH/" target="_blank" rel="noopener noreferrer" class="btn-eco-clash-cert">🌿 MAIN ECO CLASH</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="name-alert-overlay" id="nameAlertOverlay">
+    <div class="name-alert-box">
+        <span class="alert-emoji">⚠️</span>
+        <h3>NAMA BELUM DIISI!</h3>
+        <p>📝 ISI TERLEBIH DAHULU DENGAN NAMA LENGKAP LALU KLIK MULAI!</p>
+        <button class="btn-ok" id="nameAlertOk">OK, SIAP! 👍</button>
+    </div>
+</div>
+
+<script>
+    console.log('🚀 ECO SPENSASED loaded');
+
+    const state = {
+        playerName: '', xp: 0, badges: [],
+        missionDone: [false, false, false, false, false, false, false],
+        trashItems: [
+            { id: 'daun', label: '🍂', type: 'organik', name: 'Daun' },
+            { id: 'kertas', label: '📄', type: 'organik', name: 'Kertas' },
+            { id: 'kulitpisang', label: '🍌', type: 'organik', name: 'Kulit Pisang' },
+            { id: 'sisa', label: '🥗', type: 'organik', name: 'Sisa Makanan' },
+            { id: 'plastik', label: '🥤', type: 'anorganik', name: 'Plastik' },
+            { id: 'botol', label: '🍾', type: 'anorganik', name: 'Botol' },
+            { id: 'kaleng', label: '🥫', type: 'anorganik', name: 'Kaleng' },
+            { id: 'baterai', label: '🔋', type: 'berbahaya', name: 'Baterai Bekas' },
+            { id: 'aki', label: '🔌', type: 'berbahaya', name: 'Aki Kendaraan' },
+            { id: 'lampu', label: '💡', type: 'berbahaya', name: 'Lampu Rusak' },
+            { id: 'obat', label: '💊', type: 'berbahaya', name: 'Obat Kadaluwarsa' }
+        ],
+        trashRemaining: [], task1Score: 0, task1Total: 11, task1Complete: false,
+        compostItems: [
+            { id: 'daun', label: '🍂', isOrganic: true, name: 'Daun' },
+            { id: 'kulit', label: '🍌', isOrganic: true, name: 'Kulit Pisang' },
+            { id: 'ranting', label: '🌿', isOrganic: true, name: 'Ranting' },
+            { id: 'sisa_makanan', label: '🍲', isOrganic: true, name: 'Sisa Makanan' },
+            { id: 'sisa_sayuran', label: '🥬', isOrganic: true, name: 'Sisa Sayuran' },
+            { id: 'plastik', label: '🛍️', isOrganic: false, name: 'Plastik' },
+            { id: 'baterai', label: '🔋', isOrganic: false, name: 'Baterai' },
+            { id: 'kaca', label: '🥃', isOrganic: false, name: 'Kaca' }
+        ],
+        compostSelected: [], compostShuffled: [], task2Complete: false,
+        cityElements: [
+            { id: 'sepeda', label: '🚲', name: 'Sepeda', effect: 'good', value: 2 },
+            { id: 'sepeda_listrik', label: '🛵', name: 'Sepeda Listrik', effect: 'good', value: 2 },
+            { id: 'mobil', label: '🚗', name: 'Mobil', effect: 'bad', value: 3 },
+            { id: 'matahari', label: '☀️', name: 'Matahari', effect: 'good', value: 3 },
+            { id: 'awan', label: '☁️', name: 'Awan', effect: 'good', value: 2 },
+            { id: 'rumah', label: '🏠', name: 'Rumah', effect: 'neutral', value: 0 },
+            { id: 'gedung', label: '🏢', name: 'Gedung Tinggi', effect: 'neutral', value: 0 },
+            { id: 'aspal', label: 'ASPAL', name: 'Aspal', effect: 'neutral', value: 0 },
+            { id: 'trotoar', label: 'TROTOAR', name: 'Trotoar', effect: 'neutral', value: 0 },
+            { id: 'pohon', label: '🌳', name: 'Pohon', effect: 'good', value: 4 },
+            { id: 'tanaman', label: '🌱', name: 'Tanaman', effect: 'good', value: 2 },
+            { id: 'pabrik', label: '🏭', name: 'Pabrik', effect: 'bad', value: 5 },
+            { id: 'pembakaran_sampah', label: 'PEMBAKARAN', name: 'Pembakaran Sampah', effect: 'bad', value: 4 }
+        ],
+        cityItems: [], task3Complete: false, task3Success: false,
+        task3AlamPct: 0, task3PolusiPct: 0, task3GoodPoints: 0, task3BadPoints: 0,
+        trashCalculator: { organik: 0, kertas: 0, plastik: 0, logam: 0, kaca: 0, b3: 0, jumlahSiswa: 0, jumlahHariBulan: 30, totalPerHari: 0, totalPerSiswa: 0, totalPerMinggu: 0, totalPerBulan: 0, sudahDihitung: false },
+        task4Complete: false,
+        task5Complete: false, task5Checklist: { cek1: false, cek2: false, cek3: false },
+        mysteryBoxes: [
+            { q: "Setelah hujan deras, halaman sekolah terlihat banyak genangan karena saluran air dipenuhi sampah daun dan plastik. Tindakan yang paling tepat adalah …", options: ["Membiarkan genangan mengering sendiri", "Menutup saluran dengan tanah", "Membersihkan saluran dan mencari penyebab sampah masuk ke dalamnya", "Memindahkan sampah ke halaman belakang sekolah"], correct: 2 },
+            { q: "Sekolah ingin mengurangi penggunaan botol plastik sekali pakai. Program yang paling berkelanjutan adalah …", options: ["Melarang siswa membawa minuman", "Menyediakan air minum isi ulang dan membiasakan membawa tumbler", "Mengganti botol plastik dengan kantong plastik", "Mengumpulkan botol plastik tanpa mengurangi penggunaannya"], correct: 1 },
+            { q: "Dalam satu minggu, kelas VII menghasilkan 15 kg sampah. Setelah dilakukan pemilahan, 9 kg merupakan sampah organik, 4 kg anorganik yang dapat didaur ulang, dan 2 kg residu. Kesimpulan yang paling tepat adalah …", options: ["Semua sampah harus dibakar", "Sampah organik dan anorganik dapat dikelola dengan cara yang sama", "Sebagian besar sampah dapat dikelola melalui pengolahan organik dan daur ulang", "Sampah residu merupakan jenis sampah terbanyak"], correct: 2 },
+            { q: "Lampu di beberapa ruang kelas tetap menyala ketika ruangan kosong saat istirahat. Kebijakan yang paling tepat adalah …", options: ["Mengurangi jumlah lampu di seluruh sekolah", "Membiasakan warga sekolah mematikan lampu dan peralatan listrik saat tidak digunakan", "Menyalakan semua lampu agar sekolah terlihat aktif", "Menggunakan lampu dengan ukuran lebih besar"], correct: 1 },
+            { q: "Seorang siswa melihat temannya membuang bungkus makanan ke taman sekolah. Tindakan yang paling mencerminkan budaya Adiwiyata adalah …", options: ["Membiarkannya karena bukan tugasnya", "Memarahi temannya di depan semua siswa", "Mengingatkan dengan santun dan mengajak membuang sampah pada tempatnya", "Memfoto temannya lalu menyebarkannya di media sosial"], correct: 2 },
+            { q: "Sekolah memiliki lahan kosong yang selama ini tidak dimanfaatkan. Program yang paling mendukung keanekaragaman hayati adalah …", options: ["Menjadikannya tempat penyimpanan barang bekas", "Membuat taman dengan berbagai tanaman lokal", "Menutup seluruh lahan dengan semen", "Menjadikannya tempat parkir tambahan"], correct: 1 },
+            { q: "Penggunaan air di toilet sekolah meningkat secara signifikan. Setelah diperiksa, ditemukan beberapa keran mengalami kebocoran. Prioritas tindakan yang paling tepat adalah …", options: ["Mengurangi jumlah toilet", "Memperbaiki keran dan melakukan pemantauan penggunaan air", "Melarang siswa menggunakan toilet", "Membiarkan keran sampai rusak total"], correct: 1 },
+            { q: "Sekolah ingin mengetahui apakah program pengurangan sampah berhasil. Data yang paling tepat digunakan sebagai indikator keberhasilan adalah …", options: ["Jumlah siswa yang hadir", "Jumlah guru di sekolah", "Berat sampah yang dihasilkan sebelum dan sesudah program", "Jumlah kelas yang memiliki papan nama"], correct: 2 },
+            { q: "Kantin sekolah menggunakan banyak wadah makanan sekali pakai. Solusi yang paling sesuai dengan prinsip konsumsi berkelanjutan adalah …", options: ["Mengganti plastik dengan lebih banyak styrofoam", "Mendorong penggunaan wadah yang dapat digunakan kembali", "Membagikan kantong plastik secara gratis", "Membakar seluruh wadah bekas"], correct: 1 },
+            { q: "Di lingkungan sekitar sekolah terdapat sungai yang mulai dipenuhi sampah rumah tangga. Sekolah ingin ikut membantu menyelesaikan masalah tersebut. Langkah yang paling tepat adalah …", options: ["Membersihkan sungai sekali lalu menghentikan kegiatan", "Menyalahkan masyarakat sekitar", "Melakukan edukasi, aksi bersih sungai, dan membangun kebiasaan pengelolaan sampah bersama masyarakat", "Memindahkan sampah sungai ke tempat lain"], correct: 2 },
+            { q: "Seorang siswa berpendapat bahwa masalah lingkungan hanya menjadi tanggung jawab petugas kebersihan. Tanggapan yang paling tepat adalah …", options: ["Benar karena petugas kebersihan dibayar untuk itu", "Benar karena siswa hanya bertugas belajar", "Tidak tepat karena menjaga lingkungan merupakan tanggung jawab bersama", "Tidak tepat karena hanya kepala sekolah yang bertanggung jawab"], correct: 2 },
+            { q: "Sekolah memiliki dua pilihan untuk kegiatan penghijauan: menanam tanaman yang membutuhkan banyak air atau tanaman lokal yang lebih sesuai dengan kondisi lingkungan sekolah. Pilihan yang lebih mempertimbangkan keberlanjutan adalah …", options: ["Tanaman yang membutuhkan banyak air", "Tanaman lokal yang sesuai dengan kondisi lingkungan", "Tanaman yang paling mahal", "Tanaman yang paling cepat tumbuh tanpa mempertimbangkan kebutuhan air"], correct: 1 },
+            { q: "Perhatikan kegiatan berikut: (1) Membawa tumbler, (2) Mematikan lampu saat tidak digunakan, (3) Membakar sampah plastik, (4) Menggunakan kertas secara hemat. Kegiatan yang mendukung lingkungan berkelanjutan adalah …", options: ["(1), (2), dan (4)", "(1), (3), dan (4)", "(2) dan (3)", "(3) dan (4)"], correct: 0 },
+            { q: "Sekolah membuat program \"Satu Siswa Satu Aksi Lingkungan\". Agar program tersebut tidak hanya menjadi slogan, kegiatan yang paling tepat adalah …", options: ["Membuat poster tanpa melakukan kegiatan", "Mewajibkan siswa menghafal definisi lingkungan", "Meminta setiap siswa melakukan dan mendokumentasikan aksi lingkungan yang nyata", "Mengadakan upacara bertema lingkungan setiap hari"], correct: 2 },
+            { q: "Perubahan iklim merupakan masalah global. Salah satu tindakan sederhana yang dapat dilakukan warga sekolah untuk berkontribusi mengurangi dampak lingkungan adalah …", options: ["Menggunakan listrik sebanyak mungkin", "Mengurangi pemborosan energi dan menggunakan sumber daya secara bijak", "Membakar daun dan plastik bersama-sama", "Menggunakan kendaraan bermotor untuk jarak yang sangat dekat"], correct: 1 },
+            { q: "Dalam kegiatan sekolah, ditemukan bahwa sebagian siswa sudah memilah sampah, tetapi sampah tersebut kemudian dicampur kembali oleh petugas. Perbaikan yang paling tepat adalah …", options: ["Menghentikan kegiatan pemilahan", "Menambah tempat sampah tanpa memberikan informasi", "Menyelaraskan sistem pemilahan dari sumber sampai pengangkutan dan memberikan pemahaman kepada semua pihak", "Meminta siswa membawa semua sampah pulang"], correct: 2 },
+            { q: "Warga di sekitar sekolah mengeluhkan bau dari tempat sampah sekolah. Langkah yang menunjukkan kerja sama sekolah dan masyarakat adalah …", options: ["Mengabaikan keluhan", "Memindahkan tempat sampah ke dekat rumah warga lain", "Berdiskusi mencari penyebab dan memperbaiki sistem pengelolaan sampah", "Menutup tempat sampah sekolah"], correct: 2 },
+            { q: "Sekolah ingin mengurangi sampah organik dari kantin. Program yang paling sesuai adalah …", options: ["Membakar semua sisa makanan", "Membuang sisa makanan ke saluran air", "Mengolah sisa makanan yang sesuai menjadi kompos atau melalui pengolahan organik yang tepat", "Mencampur sisa makanan dengan plastik"], correct: 2 },
+            { q: "Suatu kelas berhasil mengurangi penggunaan plastik dari 10 kg menjadi 6 kg per minggu. Persentase pengurangan sampah plastik tersebut adalah …", options: ["20%", "30%", "40%", "60%"], correct: 2 },
+            { q: "Sekolah ingin menjadi contoh bagi masyarakat dalam menjaga lingkungan. Program yang paling mencerminkan prinsip \"berpikir global, bertindak lokal\" adalah …", options: ["Membahas masalah lingkungan global tanpa melakukan tindakan", "Melakukan aksi nyata di sekolah yang kemudian melibatkan keluarga dan masyarakat", "Mengikuti semua tren lingkungan tanpa menyesuaikan kondisi sekolah", "Membuat slogan lingkungan tanpa kegiatan nyata"], correct: 1 },
+            { q: "Sekolah memiliki program Jumat Bersih setiap minggu. Namun, sebagian siswa masih enggan berpartisipasi. Strategi yang paling tepat untuk meningkatkan partisipasi adalah …", options: ["Memberikan sanksi berat kepada siswa yang tidak ikut", "Membuat kegiatan menjadi menarik, melibatkan siswa dalam perencanaan, dan memberikan apresiasi", "Membiarkan siswa yang tidak ikut tanpa tindakan", "Menghapus program Jumat Bersih"], correct: 1 },
+            { q: "Sekolah ingin mengurangi emisi karbon dari kegiatan operasionalnya. Langkah paling efektif yang dapat dilakukan adalah …", options: ["Menambah jumlah kendaraan operasional", "Menghemat listrik, menanam pohon, dan mengurangi penggunaan kertas", "Membakar sampah di halaman sekolah", "Menambah penggunaan AC di setiap ruangan"], correct: 1 },
+            { q: "Sebuah kelas ingin membuat proyek lingkungan yang berdampak jangka panjang. Proyek yang paling tepat adalah …", options: ["Membuat poster lingkungan sekali lalu selesai", "Membuat bank sampah dan kebun sekolah yang dirawat berkelanjutan", "Membeli tanaman mahal tanpa perawatan", "Mengadakan lomba kebersihan satu kali"], correct: 1 }
+        ],
+        mysteryOpened: [], mysteryCorrect: [], task6Complete: false,
+        actionChallenges: [
+            { id: 'detektif-sampah', icon: '🌱', cat: 'sampah', title: 'Detektif Sampah', subtitle: 'Pengelolaan Sampah', level: 'Pemula', points: 50, description: 'Amati sampah di sekitar sekolahmu dan pelajari cara memilahnya dengan benar.', steps: ['Foto 5 jenis sampah di sekitar sekolah', 'Klasifikasikan: organik / anorganik / B3', 'Buang ke tempat sampah yang sesuai', 'Upload 2 foto (sebelum & sesudah)'] },
+            { id: 'polisi-energi', icon: '⚡', cat: 'listrik', title: 'Polisi Energi', subtitle: 'Pengelolaan Listrik', level: 'Menengah', points: 150, description: 'Audit penggunaan listrik di kelasmu, lalu buat poster ajakan hemat energi.', steps: ['Catat alat listrik yang menyala di kelas', 'Buat poster ajakan hemat energi', 'Matikan lampu/kipas saat tidak dipakai', 'Foto poster & suasana kelas'] },
+            { id: 'dokter-tanaman', icon: '🌳', cat: 'hijau', title: 'Dokter Tanaman', subtitle: 'Penghijauan', level: 'Mahir', points: 300, description: 'Tanam 1 bibit dan rawat selama 30 hari. Catat pertumbuhannya!', steps: ['Siapkan pot & bibit', 'Tanam dengan benar', 'Siram setiap hari', 'Foto pertumbuhan setiap 3 hari', 'Upload foto terakhir + cerita'] },
+            { id: 'chef-kompos', icon: '🌱', cat: 'kompos', title: 'Chef Kompos', subtitle: 'Pengelolaan Sampah', level: 'Master', points: 500, description: 'Buat kompos dari sampah organik rumah/sekolah selama 2 minggu.', steps: ['Kumpulkan sampah organik', 'Siapkan wadah kompos', 'Campur dengan tanah & ragi', 'Aduk setiap 3 hari', 'Panen kompos & foto hasilnya', 'Upload foto + cerita'] },
+            { id: 'pejuang-bekal', icon: '🍎', cat: 'kantin', title: 'Pejuang Bekal', subtitle: 'Kantin Sehat', level: 'Pemula', points: 100, description: 'Bawa bekal dari rumah selama 5 hari. Kurangi sampah plastik!', steps: ['Bawa bekal 5 hari berturut-turut', 'Gunakan kotak makan & tumbler', 'Foto bekal setiap hari', 'Upload 5 foto + cerita'] }
+        ],
+        actionProgress: {}, task7Complete: false, task7Finished: false,
+        currentTab: '1', gameStarted: false, coverShown: true,
+    };
+
+    const coverPage = document.getElementById('coverPage');
+    const dashboard = document.getElementById('dashboard');
+    const gameArea = document.getElementById('gameArea');
+    const nameInput = document.getElementById('nameInput');
+    const startBtn = document.getElementById('startBtn');
+    const startAdventureBtn = document.getElementById('startAdventureBtn');
+    const homeFloatingBtn = document.getElementById('homeFloatingBtn');
+    const playerNameDisplay = document.getElementById('playerNameDisplay');
+    const missionContent = document.getElementById('missionContent');
+    const missionPanel = document.getElementById('missionPanel');
+    const xpDisplay = document.getElementById('xpDisplay');
+    const badgeDisplay = document.getElementById('badgeDisplay');
+    const badgeCollection = document.getElementById('badgeCollection');
+    const certificateBtnWrapper = document.getElementById('certificateBtnWrapper');
+    const certificateBtn = document.getElementById('certificateBtn');
+    const certOverlay = document.getElementById('certificateOverlay');
+    const closeCertBtn = document.getElementById('closeCertBtn');
+    const certName = document.getElementById('certName');
+    const certBadges = document.getElementById('certBadges');
+
+    function showDashboard() {
+        if (coverPage) coverPage.style.display = 'none';
+        if (dashboard) dashboard.style.display = 'block';
+        if (gameArea) gameArea.style.display = 'none';
+        if (homeFloatingBtn) homeFloatingBtn.classList.add('show');
+        state.coverShown = false;
+        if (nameInput) setTimeout(() => nameInput.focus(), 300);
+    }
+    window.goToDashboard = showDashboard;
+
+    function showCoverPage() {
+        if (coverPage) coverPage.style.display = 'block';
+        if (dashboard) dashboard.style.display = 'none';
+        if (gameArea) gameArea.style.display = 'none';
+        state.coverShown = true;
+        if (homeFloatingBtn) homeFloatingBtn.classList.remove('show');
+    }
+
+    function updateUI() {
+        if (xpDisplay) xpDisplay.textContent = state.xp;
+        if (badgeDisplay) badgeDisplay.textContent = state.badges.length > 0 ? '🏅'.repeat(state.badges.length) : '🏅';
+        for (let i = 1; i <= 7; i++) {
+            const icon = document.getElementById(`status${i}`);
+            if (icon) icon.textContent = state.missionDone[i-1] ? '✅' : '⬜';
+        }
+        document.querySelectorAll('.mission-btn').forEach(b => b.classList.remove('active'));
+        const activeBtn = document.getElementById(`tab${state.currentTab}`);
+        if (activeBtn) activeBtn.classList.add('active');
+        if (badgeCollection) {
+            badgeCollection.querySelectorAll('.badge-item').forEach(el => {
+                if (state.badges.includes(el.dataset.badge)) el.classList.add('unlocked');
+                else el.classList.remove('unlocked');
+            });
+        }
+        if (playerNameDisplay) playerNameDisplay.textContent = state.playerName || 'Pahlawan';
+        const allBadges = ['master-pilah', 'petani-kompos', 'arsitek-hijau', 'ahli-hitung-sampah', 'pembaca-hebat', 'detektif-adiwiyata', 'aktivis-adiwiyata'];
+        if (certificateBtnWrapper) {
+            if (allBadges.every(b => state.badges.includes(b))) certificateBtnWrapper.classList.add('show');
+            else certificateBtnWrapper.classList.remove('show');
+        }
+    }
+
+    function addXP(amount) { state.xp += amount; updateUI(); }
+    function unlockBadge(id) {
+        if (!state.badges.includes(id)) { state.badges.push(id); updateUI(); return true; }
+        return false;
+    }
+    function shuffleArray(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+    function showFeedback(msg, color = '#2e7d32', duration = 2500) {
+        const fb = document.getElementById('taskFeedback');
+        if (fb) {
+            fb.textContent = msg; fb.style.color = color;
+            if (window._feedbackTimer) clearTimeout(window._feedbackTimer);
+            window._feedbackTimer = setTimeout(() => { if (fb) fb.textContent = ''; }, duration);
+        }
+    }
+    function getPlayerName() { return state.playerName || 'Pahlawan Cilik'; }
+
+    function getIndonesianDate() {
+        const bulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        const now = new Date();
+        return `${now.getDate()} ${bulan[now.getMonth()]} ${now.getFullYear()}`;
+    }
+    function setCertificateDate() {
+        const el = document.getElementById('certDate');
+        if (el) el.textContent = getIndonesianDate();
+    }
+
+    function startGame() {
+        const name = nameInput.value.trim();
+        if (name === '') { showNameAlert(); return; }
+        if (name.length < 3) { showNameAlert('Nama terlalu pendek! Minimal 3 huruf ya! ✏️'); return; }
+        state.playerName = name;
+        state.gameStarted = true;
+        if (dashboard) dashboard.style.display = 'none';
+        if (coverPage) coverPage.style.display = 'none';
+        if (gameArea) gameArea.style.display = 'block';
+        state.trashRemaining = state.trashItems.map(i => ({ ...i }));
+        shuffleArray(state.trashRemaining);
+        state.task1Score = 0;
+        renderMission('1'); updateUI();
+        if (playerNameDisplay) playerNameDisplay.textContent = state.playerName;
+    }
+    function showNameAlert(customMessage = null) {
+        const overlay = document.getElementById('nameAlertOverlay');
+        if (!overlay) return;
+        const alertBox = overlay.querySelector('.name-alert-box p');
+        if (customMessage) alertBox.textContent = '📝 ' + customMessage;
+        else alertBox.textContent = '📝 ISI TERLEBIH DAHULU DENGAN NAMA LENGKAP LALU KLIK MULAI!';
+        overlay.classList.add('show');
+        nameInput.classList.add('input-error');
+        setTimeout(() => nameInput.focus(), 300);
+    }
+    function hideNameAlert() {
+        const overlay = document.getElementById('nameAlertOverlay');
+        if (!overlay) return;
+        overlay.classList.remove('show');
+        nameInput.classList.remove('input-error');
+    }
+
+    function renderMission(tabId) {
+        state.currentTab = tabId;
+        if (missionPanel) {
+            if (tabId === '3') {
+                missionPanel.classList.add('no-transparent');
+            } else {
+                missionPanel.classList.remove('no-transparent');
+            }
+        }
+        if (tabId === '1') renderTask1();
+        else if (tabId === '2') renderTask2();
+        else if (tabId === '3') renderTask3();
+        else if (tabId === '4') renderTask4();
+        else if (tabId === '5') renderTask5();
+        else if (tabId === '6') renderTask6();
+        else if (tabId === '7') renderTask7();
+        updateUI();
+    }
+
+    function renderTask1() {
+        if (state.task1Complete) {
+            missionContent.innerHTML = `<h2>🗑️ Misi 1: Pilah Sampah</h2><div class="mission-content"><div class="mission-desc">✅ Selesai! Semua sampah terpilah.</div><div style="margin:10px 0; font-size:2.2rem;">🏅 Master Pilah</div><button class="btn-reset" onclick="resetTask1()" style="background:#ffa726; margin-top:8px;">↻ Ulangi Misi</button></div>`;
+            return;
+        }
+        if (state.trashRemaining.length === 0) {
+            state.trashRemaining = state.trashItems.map(item => ({ ...item }));
+            shuffleArray(state.trashRemaining);
+            state.task1Score = 0;
+        }
+        let html = `<h2>🗑️ Misi 1: Pilah Sampah</h2><div class="mission-content"><div class="mission-desc">Seret setiap sampah ke tempat yang benar! 🧤</div><div class="task-score">Skor: ${state.task1Score} / ${state.task1Total}</div><div class="drag-area"><div class="trash-items" id="trashContainer">`;
+        state.trashRemaining.forEach(item => {
+            html += `<div class="trash-item" draggable="true" data-id="${item.id}" data-type="${item.type}">${item.label} <span class="label">${item.name}</span></div>`;
+        });
+        html += `</div><div class="bins"><div class="bin organik" data-type="organik"><span>♻️</span> ORGANIK<div class="sub">(sampah alami)</div></div><div class="bin anorganik" data-type="anorganik"><span>♻️</span> ANORGANIK<div class="sub">(non-alami)</div></div><div class="bin berbahaya" data-type="berbahaya"><span>☣️</span> BERBAHAYA<div class="sub">(B3 / toxic)</div></div></div></div><div class="task-feedback" id="taskFeedback"></div></div>`;
+        missionContent.innerHTML = html;
+        document.querySelectorAll('.trash-item').forEach(item => {
+            item.addEventListener('dragstart', e => { e.target.classList.add('dragging'); e.dataTransfer.setData('text/plain', e.target.dataset.id); });
+            item.addEventListener('dragend', e => e.target.classList.remove('dragging'));
+        });
+        document.querySelectorAll('.bin').forEach(bin => {
+            bin.addEventListener('dragover', e => e.preventDefault());
+            bin.addEventListener('drop', e => {
+                e.preventDefault();
+                const id = e.dataTransfer.getData('text/plain');
+                const itemElem = document.querySelector(`.trash-item[data-id="${id}"]`);
+                if (!itemElem) return;
+                if (itemElem.dataset.type === bin.dataset.type) {
+                    state.trashRemaining = state.trashRemaining.filter(it => it.id !== id);
+                    state.task1Score++;
+                    itemElem.remove();
+                    showFeedback('✅ Benar!', '#2e7d32', 1200);
+                    document.querySelector('.task-score').textContent = `Skor: ${state.task1Score} / ${state.task1Total}`;
+                    if (state.trashRemaining.length === 0) setTimeout(completeTask1, 400);
+                } else { showFeedback('❌ Salah!', '#c62828', 1200); }
+                updateUI();
+            });
+        });
+    }
+    function completeTask1() {
+        if (state.task1Complete) return;
+        state.task1Complete = true; state.missionDone[0] = true;
+        addXP(50); unlockBadge('master-pilah');
+        renderTask1();
+        showFeedback('🏅 Lencana Master Pilah! +50 XP', '#f9a825', 3000);
+    }
+    function resetTask1() {
+        state.task1Complete = false; state.missionDone[0] = false;
+        state.trashRemaining = state.trashItems.map(item => ({ ...item }));
+        shuffleArray(state.trashRemaining);
+        state.task1Score = 0;
+        renderMission('1'); updateUI();
+    }
+
+    function renderTask2() {
+        if (state.task2Complete) {
+            missionContent.innerHTML = `<h2>🌿 Misi 2: Pahlawan Kompos</h2><div class="mission-content"><div class="mission-desc">✅ Kompos berhasil dibuat! 🌱</div><div style="margin:10px 0; font-size:2.2rem;">🏅 Petani Kompos</div><button class="btn-reset" onclick="resetTask2()" style="background:#ffa726; margin-top:8px;">↻ Ulangi Misi</button></div>`;
+            return;
+        }
+        if (!state.compostShuffled || state.compostShuffled.length === 0) {
+            const allItems = state.compostItems.map(item => ({ ...item }));
+            shuffleArray(allItems);
+            state.compostShuffled = allItems;
+        }
+        let html = `<h2>🌿 Misi 2: Pahlawan Kompos</h2><div class="mission-content"><div class="mission-desc">Pilih 5 bahan organik, lalu klik "Olah Kompos" 🗑️</div><div class="compost-items" id="compostContainer">`;
+        state.compostShuffled.forEach(item => {
+            const selected = state.compostSelected.includes(item.id);
+            html += `<div class="compost-item ${selected ? 'selected' : ''}" data-id="${item.id}" data-organic="${item.isOrganic}">${item.label} <span class="label">${item.name}</span></div>`;
+        });
+        html += `</div><div class="compost-status" id="compostStatus">Pilih 5 bahan organik</div><div class="compost-animation" id="compostAnim">🪴</div><button class="btn-kompos" id="btnOlahKompos">🗑️ Olah Kompos</button><div class="task-feedback" id="taskFeedback"></div></div>`;
+        missionContent.innerHTML = html;
+        document.querySelectorAll('.compost-item').forEach(el => {
+            el.addEventListener('click', function() {
+                if (state.task2Complete) return;
+                const id = this.dataset.id;
+                const idx = state.compostSelected.indexOf(id);
+                if (idx > -1) { state.compostSelected.splice(idx, 1); this.classList.remove('selected'); }
+                else {
+                    if (state.compostSelected.length >= 5) { showFeedback('⛔ Sudah memilih 5 bahan!', '#c62828', 1500); return; }
+                    state.compostSelected.push(id); this.classList.add('selected');
+                }
+                const count = state.compostSelected.length;
+                document.getElementById('compostStatus').textContent = count === 0 ? 'Pilih 5 bahan organik' : `Terpilih ${count}/5`;
+                const anim = document.getElementById('compostAnim');
+                if (anim) anim.textContent = count === 0 ? '🪴' : count <= 2 ? '🌱' : count <= 4 ? '🌿' : '🌳✨';
+            });
+        });
+        document.getElementById('btnOlahKompos').addEventListener('click', function() {
+            if (state.task2Complete) return;
+            const organics = state.compostSelected.filter(id => { const item = state.compostItems.find(i => i.id === id); return item && item.isOrganic; });
+            const nonOrganics = state.compostSelected.filter(id => { const item = state.compostItems.find(i => i.id === id); return item && !item.isOrganic; });
+            if (nonOrganics.length > 0) { showFeedback('❌ MISI GAGAL!', '#c62828', 3000); state.compostSelected = []; renderTask2(); }
+            else if (organics.length === 5) { completeTask2(); }
+            else { showFeedback(`❌ Harus tepat 5 bahan organik!`, '#c62828', 3000); state.compostSelected = []; renderTask2(); }
+        });
+    }
+    function completeTask2() {
+        if (state.task2Complete) return;
+        state.task2Complete = true; state.missionDone[1] = true;
+        addXP(50); unlockBadge('petani-kompos');
+        renderTask2();
+        showFeedback('🏅 Lencana Petani Kompos! +50 XP', '#f9a825', 3000);
+    }
+    function resetTask2() {
+        state.task2Complete = false; state.missionDone[1] = false;
+        state.compostSelected = []; state.compostShuffled = [];
+        renderMission('2'); updateUI();
+    }
+
+    function getElementSize(elementId, item) {
+        let baseSize;
+        if (elementId === 'aspal') baseSize = { w: 90, h: 34 };
+        else if (elementId === 'trotoar') baseSize = { w: 60, h: 46 };
+        else if (elementId === 'gedung') baseSize = { w: 52, h: 52 };
+        else if (elementId === 'pembakaran_sampah') baseSize = { w: 44, h: 44 };
+        else if (elementId === 'awan') baseSize = { w: 58, h: 50 };
+        else baseSize = { w: 50, h: 50 };
+        if (item && (elementId === 'aspal' || elementId === 'trotoar')) { const rot = item.rotation || 0; if (rot === 90 || rot === 270) return { w: baseSize.h, h: baseSize.w }; }
+        return baseSize;
+    }
+    function findSnapPosition(dropX, dropY, elementId, currentIndex, canvasRect, currentRotation = 0) {
+        const ELEM_SIZE = getElementSize(elementId, { rotation: currentRotation });
+        const ELEM_W = ELEM_SIZE.w, ELEM_H = ELEM_SIZE.h;
+        const SNAP_DISTANCE = 100;
+        const candidates = [];
+        state.cityItems.forEach((target, idx) => {
+            if (idx === currentIndex) return;
+            const targetSize = getElementSize(target.id, target);
+            const TW = targetSize.w, TH = targetSize.h;
+            const TX = target.x, TY = target.y;
+            candidates.push({ x: TX + TW, y: TY });
+            candidates.push({ x: TX - ELEM_W, y: TY });
+            candidates.push({ x: TX, y: TY + TH });
+            candidates.push({ x: TX, y: TY - ELEM_H });
+            candidates.push({ x: TX + TW, y: TY + TH });
+            candidates.push({ x: TX - ELEM_W, y: TY - ELEM_H });
+            candidates.push({ x: TX + TW, y: TY - ELEM_H });
+            candidates.push({ x: TX - ELEM_W, y: TY + TH });
+        });
+        let best = null, bestDist = SNAP_DISTANCE;
+        candidates.forEach(c => { const dist = Math.hypot(c.x - dropX, c.y - dropY); if (dist < bestDist) { bestDist = dist; best = c; } });
+        if (best) return { x: Math.max(0, Math.min(canvasRect.width - ELEM_W, best.x)), y: Math.max(0, Math.min(canvasRect.height - ELEM_H, best.y)), snapped: true };
+        return null;
+    }
+    function renderTask3() {
+        if (state.task3Complete && state.task3Success) {
+            let alamPct = state.task3AlamPct, polusiPct = state.task3PolusiPct;
+            if (alamPct === undefined || polusiPct === undefined) {
+                let gP = 0, bP = 0;
+                state.cityItems.forEach(item => { const el = state.cityElements.find(e => e.id === item.id); if (!el) return; if (el.effect === 'good') gP += el.value; else if (el.effect === 'bad') bP += el.value; });
+                const totalPoint = gP + bP + 1;
+                alamPct = Math.min(100, Math.round((gP / totalPoint) * 100));
+                polusiPct = Math.min(100, Math.round((bP / totalPoint) * 100));
+            }
+            missionContent.innerHTML = `<h2>🏙️ Misi 3: Bangun Kota Hijau</h2><div class="mission-content"><div class="mission-desc">✅ Kota hijau berhasil dibangun! 🏆</div><div style="margin:10px 0; font-size:2.2rem;">🏅 Arsitek Hijau</div><div class="city-stats"><span class="alam">🌳 Alam: ${alamPct}%</span><span class="polusi">🏭 Polusi: ${polusiPct}%</span></div><button class="btn-reset" onclick="resetTask3()" style="background:#ffa726; margin-top:8px;">↻ Ulangi Misi</button></div>`;
+            return;
+        }
+        let goodPoints = 0, badPoints = 0;
+        state.cityItems.forEach(item => { const el = state.cityElements.find(e => e.id === item.id); if (!el) return; if (el.effect === 'good') goodPoints += el.value; else if (el.effect === 'bad') badPoints += el.value; });
+        const total = goodPoints + badPoints + 1;
+        const alamPct = Math.min(100, Math.round((goodPoints / total) * 100));
+        const polusiPct = Math.min(100, Math.round((badPoints / total) * 100));
+        const jumlahItem = state.cityItems.length;
+        let html = `<h2>🏙️ Misi 3: Bangun Kota Hijau</h2><div class="mission-content"><div class="mission-desc">Seret elemen ke kanvas hijau. Elemen akan menempel otomatis!</div><div class="city-stats"><span class="alam">🌳 Alam: ${alamPct}%</span><span class="polusi">🏭 Polusi: ${polusiPct}%</span><span style="color:#4e342e;">🧩 Elemen: ${jumlahItem}</span></div><div class="palette-landscape"><h4>🎨 Elemen Kota</h4><div class="palette-items-horizontal">`;
+        state.cityElements.forEach(el => {
+            const effectClass = el.effect === 'good' ? 'good' : el.effect === 'bad' ? 'bad' : 'neutral';
+            if (el.id === 'aspal') html += `<div class="palette-item-horizontal ${effectClass}" draggable="true" data-id="${el.id}"><span class="aspal-visual"></span><span class="pname">${el.name}</span></div>`;
+            else if (el.id === 'trotoar') html += `<div class="palette-item-horizontal ${effectClass}" draggable="true" data-id="${el.id}"><span class="trotoar-visual"><span class="person">🚶</span><span class="paving"></span></span><span class="pname">${el.name}</span></div>`;
+            else if (el.id === 'pembakaran_sampah') html += `<div class="palette-item-horizontal ${effectClass}" draggable="true" data-id="${el.id}"><span class="pembakaran-visual"><span class="emoji-stack">🗑️<span class="fire">🔥</span></span></span><span class="pname">${el.name}</span></div>`;
+            else html += `<div class="palette-item-horizontal ${effectClass}" draggable="true" data-id="${el.id}">${el.label}<span class="pname">${el.name}</span></div>`;
+        });
+        html += `</div></div><div class="city-canvas-wrapper"><div class="city-canvas" id="cityCanvas">`;
+        state.cityItems.forEach((item, idx) => {
+            const el = state.cityElements.find(e => e.id === item.id);
+            if (!el) return;
+            const rotation = item.rotation || 0;
+            const isRotatable = (el.id === 'aspal' || el.id === 'trotoar');
+            const rotStyle = isRotatable ? `transform: rotate(${rotation}deg);` : '';
+            if (el.id === 'aspal') html += `<div class="city-placed-item draggable-placed" style="left:${item.x}px; top:${item.y}px; z-index:${item.z || 10};" data-id="${el.id}" data-index="${idx}"><span class="aspal-canvas-visual${item.vertical ? ' vertical' : ''}" style="${rotStyle}"></span><span class="remove-item">✕</span></div>`;
+            else if (el.id === 'trotoar') html += `<div class="city-placed-item draggable-placed" style="left:${item.x}px; top:${item.y}px; z-index:${item.z || 10};" data-id="${el.id}" data-index="${idx}"><span class="trotoar-canvas-visual" style="${rotStyle}"><span class="person">🚶</span><span class="paving"></span></span><span class="remove-item">✕</span></div>`;
+            else if (el.id === 'pembakaran_sampah') html += `<div class="city-placed-item draggable-placed" style="left:${item.x}px; top:${item.y}px; z-index:${item.z || 10};" data-id="${el.id}" data-index="${idx}"><span class="pembakaran-canvas-visual"><span class="emoji-stack">🗑️<span class="fire">🔥</span></span></span><span class="remove-item">✕</span></div>`;
+            else if (el.id === 'gedung') html += `<div class="city-placed-item draggable-placed" style="left:${item.x}px; top:${item.y}px; font-size: 2.8rem; z-index:${item.z || 10};" data-id="${el.id}" data-index="${idx}">${el.label}<span class="remove-item">✕</span></div>`;
+            else html += `<div class="city-placed-item draggable-placed" style="left:${item.x}px; top:${item.y}px; z-index:${item.z || 10};" data-id="${el.id}" data-index="${idx}">${el.label}<span class="remove-item">✕</span></div>`;
+        });
+        html += `</div></div><div class="city-controls"><button class="city-btn save" id="saveCityBtn">💾 SIMPAN KOTA</button><button class="city-btn clear" id="clearCityBtn">🧹 Kosongkan</button></div><div id="cityResultArea"></div><div class="task-feedback" id="taskFeedback"></div></div>`;
+        missionContent.innerHTML = html;
+        document.querySelectorAll('.palette-item-horizontal').forEach(item => {
+            item.addEventListener('dragstart', function(e) { e.dataTransfer.setData('text/plain', this.dataset.id); this.style.opacity = '0.5'; });
+            item.addEventListener('dragend', function(e) { this.style.opacity = '1'; });
+        });
+        const canvas = document.getElementById('cityCanvas');
+        canvas.addEventListener('dragover', e => { e.preventDefault(); canvas.classList.add('canvas-drag-over'); });
+        canvas.addEventListener('dragleave', () => canvas.classList.remove('canvas-drag-over'));
+        canvas.addEventListener('drop', function(e) {
+            e.preventDefault(); this.classList.remove('canvas-drag-over');
+            if (state.task3Complete) return;
+            const elementId = e.dataTransfer.getData('text/plain');
+            if (!elementId) return;
+            const el = state.cityElements.find(e => e.id === elementId);
+            if (!el) return;
+            const rect = this.getBoundingClientRect();
+            const size = getElementSize(elementId, { rotation: 0 });
+            let posX = e.clientX - rect.left - size.w / 2;
+            let posY = e.clientY - rect.top - size.h / 2;
+            posX = Math.max(0, Math.min(rect.width - size.w, posX));
+            posY = Math.max(0, Math.min(rect.height - size.h, posY));
+            const snapResult = findSnapPosition(posX, posY, elementId, -1, rect, 0);
+            let finalX = posX, finalY = posY;
+            if (snapResult) { finalX = snapResult.x; finalY = snapResult.y; }
+            state.cityItems.push({ id: elementId, x: finalX, y: finalY, vertical: false, rotation: 0, z: Date.now() });
+            renderTask3();
+            if (snapResult) showFeedback(`📎 ${el.name} menempel!`, '#2e7d32', 800); else showFeedback(`✅ ${el.name} ditempatkan!`, '#2e7d32', 800);
+        });
+        document.querySelectorAll('.remove-item').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (state.task3Complete) return;
+                const parent = this.closest('.city-placed-item');
+                const index = parseInt(parent.dataset.index);
+                if (!isNaN(index) && state.cityItems[index]) state.cityItems.splice(index, 1);
+                renderTask3();
+            });
+        });
+        document.querySelectorAll('.city-placed-item.draggable-placed').forEach(el => {
+            let isDragging = false, hasMoved = false;
+            let startX = 0, startY = 0, offsetX = 0, offsetY = 0, originalIndex = -1;
+            const startDrag = (clientX, clientY) => {
+                if (state.task3Complete) return;
+                originalIndex = parseInt(el.dataset.index);
+                if (isNaN(originalIndex) || !state.cityItems[originalIndex]) return;
+                const elRect = el.getBoundingClientRect();
+                offsetX = clientX - elRect.left; offsetY = clientY - elRect.top;
+                startX = clientX; startY = clientY;
+                isDragging = false; hasMoved = false;
+            };
+            const moveDrag = (clientX, clientY, event) => {
+                if (state.task3Complete) return;
+                const dx = clientX - startX, dy = clientY - startY;
+                if (!isDragging && Math.hypot(dx, dy) > 3) {
+                    isDragging = true; hasMoved = true;
+                    el.classList.add('dragging-placed');
+                    if (state.cityItems[originalIndex]) { state.cityItems[originalIndex].z = Date.now(); el.style.zIndex = '9999'; }
+                }
+                if (isDragging) {
+                    if (event) event.preventDefault();
+                    const pr = canvas.getBoundingClientRect();
+                    let newX = clientX - pr.left - offsetX;
+                    let newY = clientY - pr.top - offsetY;
+                    newX = Math.min(pr.width - 20, Math.max(0, newX));
+                    newY = Math.min(pr.height - 20, Math.max(0, newY));
+                    el.style.left = newX + 'px';
+                    el.style.top = newY + 'px';
+                }
+            };
+            const endDrag = (clientX, clientY) => {
+                if (state.task3Complete) { isDragging = false; return; }
+                if (isDragging) {
+                    el.classList.remove('dragging-placed');
+                    if (originalIndex >= 0 && state.cityItems[originalIndex]) {
+                        const pr = canvas.getBoundingClientRect();
+                        const currentRotation = state.cityItems[originalIndex].rotation || 0;
+                        const size = getElementSize(el.dataset.id, { rotation: currentRotation });
+                        let currentX = parseFloat(el.style.left) || 0;
+                        let currentY = parseFloat(el.style.top) || 0;
+                        currentX = Math.max(0, Math.min(pr.width - size.w, currentX));
+                        currentY = Math.max(0, Math.min(pr.height - size.h, currentY));
+                        const snapResult = findSnapPosition(currentX, currentY, el.dataset.id, originalIndex, pr, currentRotation);
+                        if (snapResult) { state.cityItems[originalIndex].x = snapResult.x; state.cityItems[originalIndex].y = snapResult.y; }
+                        else { state.cityItems[originalIndex].x = currentX; state.cityItems[originalIndex].y = currentY; }
+                        renderTask3();
+                    }
+                }
+                isDragging = false;
+            };
+            el.addEventListener('mousedown', (e) => {
+                if (e.target.classList.contains('remove-item')) return;
+                if (state.task3Complete) return;
+                startDrag(e.clientX, e.clientY);
+                e.preventDefault();
+                const gm = (ev) => moveDrag(ev.clientX, ev.clientY, ev);
+                const gu = (ev) => { endDrag(ev.clientX, ev.clientY); document.removeEventListener('mousemove', gm); document.removeEventListener('mouseup', gu); };
+                document.addEventListener('mousemove', gm);
+                document.addEventListener('mouseup', gu);
+            });
+            el.addEventListener('touchstart', (e) => { if (e.target.classList.contains('remove-item')) return; if (state.task3Complete) return; const t = e.touches[0]; startDrag(t.clientX, t.clientY); }, { passive: true });
+            el.addEventListener('touchmove', (e) => { if (state.task3Complete) return; const t = e.touches[0]; moveDrag(t.clientX, t.clientY, e); }, { passive: false });
+            el.addEventListener('touchend', (e) => { if (state.task3Complete) return; const t = e.changedTouches[0]; endDrag(t.clientX, t.clientY); });
+            el.addEventListener('click', function(e) {
+                if (e.target.classList.contains('remove-item')) return;
+                if (state.task3Complete) return;
+                if (hasMoved) { hasMoved = false; return; }
+                const elId = this.dataset.id;
+                if (elId !== 'aspal' && elId !== 'trotoar') return;
+                const index = parseInt(this.dataset.index);
+                if (isNaN(index) || !state.cityItems[index]) return;
+                state.cityItems[index].rotation = (state.cityItems[index].rotation || 0) + 45;
+                if (state.cityItems[index].rotation >= 360) state.cityItems[index].rotation = 0;
+                renderTask3();
+            });
+        });
+        document.getElementById('clearCityBtn').addEventListener('click', function() { if (state.task3Complete) return; state.cityItems = []; renderTask3(); });
+        document.getElementById('saveCityBtn').addEventListener('click', function() {
+            if (state.task3Complete) return;
+            let gP = 0, bP = 0;
+            state.cityItems.forEach(item => { const el = state.cityElements.find(e => e.id === item.id); if (!el) return; if (el.effect === 'good') gP += el.value; else if (el.effect === 'bad') bP += el.value; });
+            const totalPoint = gP + bP + 1;
+            const alamPct = Math.min(100, Math.round((gP / totalPoint) * 100));
+            const polusiPct = Math.min(100, Math.round((bP / totalPoint) * 100));
+            const resultArea = document.getElementById('cityResultArea');
+            if (gP > bP) {
+                state.task3Success = true; state.task3Complete = true; state.missionDone[2] = true;
+                state.task3AlamPct = alamPct; state.task3PolusiPct = polusiPct;
+                state.task3GoodPoints = gP; state.task3BadPoints = bP;
+                addXP(100); unlockBadge('arsitek-hijau');
+                resultArea.innerHTML = `<div class="city-result success">🌟 KOTA HIJAU MU SANGAT INDAH! 🌟<br><span style="font-size:0.9rem;">Alam ${alamPct}% vs Polusi ${polusiPct}%</span></div>`;
+                setTimeout(() => { renderTask3(); updateUI(); }, 800);
+            } else {
+                resultArea.innerHTML = `<div class="city-result fail">😢 KOTAMU SANGAT KOTOR!<br><span style="font-size:0.9rem;">Alam ${alamPct}% vs Polusi ${polusiPct}%</span></div>`;
+            }
+        });
+    }
+    function resetTask3() {
+        state.task3Complete = false; state.task3Success = false;
+        state.missionDone[2] = false; state.cityItems = [];
+        state.task3AlamPct = 0; state.task3PolusiPct = 0;
+        renderMission('3'); updateUI();
+    }
+
+    function renderTask4() {
+        if (state.task4Complete) {
+            const c = state.trashCalculator;
+            missionContent.innerHTML = `<h2>🧮 Misi 4: Kalkulator Sampah Harian</h2><div class="mission-content"><div class="mission-desc">✅ Selesai! 📊</div><div style="margin:10px 0; font-size:2.2rem;">🏅 Ahli Hitung Sampah</div><div class="calc-summary"><h3>📊 Hasil</h3><div class="calc-total-row"><span>🗑️ Per hari</span><span class="value-total">${c.totalPerHari.toFixed(2)} kg</span></div><div class="calc-total-row"><span>👤 Per siswa</span><span class="value-total">${c.totalPerSiswa.toFixed(3)} kg</span></div><div class="calc-total-row"><span>📅 Per minggu</span><span class="value-total">${c.totalPerMinggu.toFixed(2)} kg</span></div><div class="calc-total-row"><span>📆 Per bulan</span><span class="value-total">${c.totalPerBulan.toFixed(2)} kg</span></div></div><button class="btn-reset" onclick="resetTask4()" style="background:#ffa726; margin-top:12px;">↻ Ulangi Misi</button></div>`;
+            return;
+        }
+        let html = `<h2>🧮 Misi 4: Kalkulator Sampah Harian</h2><div class="mission-content"><div class="mission-desc">Hitung sampah sekolah per hari! 📊</div><div class="calc-container"><div class="calc-row"><span class="calc-icon">🍂</span><span class="calc-label">Organik</span><input type="number" id="calcOrganik" min="0" step="0.1" placeholder="0"><span class="calc-total-item" id="totalOrganik">0 kg</span></div><div class="calc-row"><span class="calc-icon">📄</span><span class="calc-label">Kertas</span><input type="number" id="calcKertas" min="0" step="0.1" placeholder="0"><span class="calc-total-item" id="totalKertas">0 kg</span></div><div class="calc-row"><span class="calc-icon">🥤</span><span class="calc-label">Plastik</span><input type="number" id="calcPlastik" min="0" step="0.1" placeholder="0"><span class="calc-total-item" id="totalPlastik">0 kg</span></div><div class="calc-row"><span class="calc-icon">🥫</span><span class="calc-label">Logam</span><input type="number" id="calcLogam" min="0" step="0.1" placeholder="0"><span class="calc-total-item" id="totalLogam">0 kg</span></div><div class="calc-row"><span class="calc-icon">🥃</span><span class="calc-label">Kaca</span><input type="number" id="calcKaca" min="0" step="0.1" placeholder="0"><span class="calc-total-item" id="totalKaca">0 kg</span></div><div class="calc-row"><span class="calc-icon">🔋</span><span class="calc-label">B3</span><input type="number" id="calcB3" min="0" step="0.1" placeholder="0"><span class="calc-total-item" id="totalB3">0 kg</span></div><div class="calc-row"><span class="calc-icon">👥</span><span class="calc-label">Jumlah Siswa</span><input type="number" id="calcSiswa" min="1" placeholder="0"></div><div class="calc-row"><span class="calc-icon">📆</span><span class="calc-label">Hari/Bulan</span><select id="calcHariBulan" class="calc-select"><option value="29">29 hari</option><option value="30" selected>30 hari</option><option value="31">31 hari</option></select></div><div class="calc-summary"><h3>📊 Ringkasan</h3><div class="calc-total-row"><span>🗑️ Per hari</span><span class="value-total" id="calcTotalHari">0 kg</span></div><div class="calc-total-row"><span>👤 Per siswa</span><span class="value-total" id="calcTotalSiswa">0 kg</span></div><div class="calc-total-row"><span>📅 Per minggu (7 hari)</span><span class="value-total" id="calcTotalMinggu">0 kg</span></div><div class="calc-total-row"><span>📆 Per bulan (<span id="labelHariBulan">30</span> hari)</span><span class="value-total" id="calcTotalBulan">0 kg</span></div></div><div id="calcComparisonArea"></div><div style="text-align:center; margin-top:8px;"><button class="btn-hitung" id="btnHitungSampah">🧮 Hitung Sekarang!</button></div><div class="task-feedback" id="taskFeedback"></div></div></div>`;
+        missionContent.innerHTML = html;
+        ['calcOrganik', 'calcKertas', 'calcPlastik', 'calcLogam', 'calcKaca', 'calcB3', 'calcSiswa'].forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener('input', updateCalcTotals); });
+        document.getElementById('calcHariBulan').addEventListener('change', updateCalcTotals);
+        document.getElementById('btnHitungSampah').addEventListener('click', hitungSampah);
+        updateCalcTotals();
+    }
+    function getCalcValues() { const g = id => parseFloat(document.getElementById(id)?.value) || 0; return { organik: g('calcOrganik'), kertas: g('calcKertas'), plastik: g('calcPlastik'), logam: g('calcLogam'), kaca: g('calcKaca'), b3: g('calcB3'), siswa: parseInt(document.getElementById('calcSiswa')?.value) || 0, hariBulan: parseInt(document.getElementById('calcHariBulan')?.value) || 30 }; }
+    function updateCalcTotals() {
+        const v = getCalcValues();
+        const totalHari = v.organik + v.kertas + v.plastik + v.logam + v.kaca + v.b3;
+        const perSiswa = v.siswa > 0 ? totalHari / v.siswa : 0;
+        const perMinggu = totalHari * 7;
+        const perBulan = totalHari * v.hariBulan;
+        const setT = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val.toFixed(1) + ' kg'; };
+        setT('totalOrganik', v.organik); setT('totalKertas', v.kertas); setT('totalPlastik', v.plastik); setT('totalLogam', v.logam); setT('totalKaca', v.kaca); setT('totalB3', v.b3);
+        const setS = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val.toFixed(2) + ' kg'; };
+        setS('calcTotalHari', totalHari); setS('calcTotalSiswa', perSiswa); setS('calcTotalMinggu', perMinggu); setS('calcTotalBulan', perBulan);
+        const lhb = document.getElementById('labelHariBulan'); if (lhb) lhb.textContent = v.hariBulan;
+    }
+    function hitungSampah() {
+        const v = getCalcValues();
+        const totalHari = v.organik + v.kertas + v.plastik + v.logam + v.kaca + v.b3;
+        if (totalHari <= 0) { showFeedback('❌ Masukkan data!', '#c62828', 2000); return; }
+        if (v.siswa <= 0) { showFeedback('❌ Isi jumlah siswa!', '#c62828', 2000); return; }
+        const perSiswa = totalHari / v.siswa;
+        state.trashCalculator = { ...v, totalPerHari: totalHari, totalPerSiswa: perSiswa, totalPerMinggu: totalHari * 7, totalPerBulan: totalHari * v.hariBulan, sudahDihitung: true };
+        const perGram = perSiswa * 1000;
+        let cls, msg;
+        if (perGram < 100) { cls = 'good'; msg = `🌟 LUAR BIASA! Sampah per siswa ${perGram.toFixed(0)} gram/hari.`; }
+        else if (perGram < 250) { cls = 'warning'; msg = `⚠️ CUKUP BAIK. Sampah per siswa ${perGram.toFixed(0)} gram/hari.`; }
+        else { cls = 'bad'; msg = `😢 PERLU PERBAIKAN! Sampah per siswa ${perGram.toFixed(0)} gram/hari.`; }
+        document.getElementById('calcComparisonArea').innerHTML = `<div class="calc-comparison ${cls}">${msg}</div>`;
+        setTimeout(() => { if (!state.task4Complete) { state.task4Complete = true; state.missionDone[3] = true; addXP(75); unlockBadge('ahli-hitung-sampah'); renderTask4(); updateUI(); } }, 1500);
+    }
+    function resetTask4() { state.task4Complete = false; state.missionDone[3] = false; state.trashCalculator = { organik: 0, kertas: 0, plastik: 0, logam: 0, kaca: 0, b3: 0, jumlahSiswa: 0, jumlahHariBulan: 30, totalPerHari: 0, totalPerSiswa: 0, totalPerMinggu: 0, totalPerBulan: 0, sudahDihitung: false }; renderMission('4'); updateUI(); }
+
+    function renderTask5() {
+        if (state.task5Complete) {
+            missionContent.innerHTML = `<h2>📚 Misi 5: Komik LINTAS</h2><div class="mission-content"><div class="mission-desc">✅ Selesai membaca! 📖</div><div style="margin:10px 0; font-size:2.2rem;">🏅 Pembaca Hebat</div><button class="btn-reset" onclick="resetTask5()" style="background:#ffa726; margin-top:12px;">↻ Ulangi Misi</button></div>`;
+            return;
+        }
+        let html = `<h2>📚 Misi 5: Komik LINTAS</h2><div class="mission-content"><div class="mission-desc">Baca komik sampai selesai! 📖</div><div class="komik-container"><div class="komik-frame-wrapper" id="komikFrameWrapper"><div class="komik-loading" id="komikLoading"><div>Memuat...</div></div><iframe id="komikIframe" src="https://online.fliphtml5.com/wind15/KOMIK-ECO-SPENSASED/" allowfullscreen></iframe></div><div style="text-align:center;"><button class="komik-btn fullscreen" id="btnFullscreen">🔍 Perbesar</button></div><div class="komik-checklist"><h4>✅ Centang jika sudah:</h4><label><input type="checkbox" id="cek1"><span>Membaca komik sampai selesai</span></label><label><input type="checkbox" id="cek2"><span>Memahami pesan lingkungan</span></label><label><input type="checkbox" id="cek3"><span>Menemukan literasi & numerasi</span></label></div><div style="text-align:center;"><button class="komik-btn finish" id="btnSelesaiBaca">📚 Selesai Baca!</button></div><div class="task-feedback" id="taskFeedback"></div></div></div>`;
+        missionContent.innerHTML = html;
+        setTimeout(() => { const l = document.getElementById('komikLoading'); if (l) l.classList.add('hidden'); }, 2000);
+        document.getElementById('btnFullscreen').addEventListener('click', function() { document.getElementById('komikFrameWrapper').classList.toggle('expanded'); });
+        ['cek1', 'cek2', 'cek3'].forEach(id => { document.getElementById(id).addEventListener('change', function() { state.task5Checklist[id] = this.checked; }); });
+        document.getElementById('btnSelesaiBaca').addEventListener('click', function() {
+            if (state.task5Complete) return;
+            if (!state.task5Checklist.cek1 || !state.task5Checklist.cek2 || !state.task5Checklist.cek3) { showFeedback('❌ Centang semua kotak!', '#c62828', 2000); return; }
+            completeTask5();
+        });
+    }
+    function completeTask5() { if (state.task5Complete) return; state.task5Complete = true; state.missionDone[4] = true; addXP(75); unlockBadge('pembaca-hebat'); renderTask5(); updateUI(); }
+    function resetTask5() { state.task5Complete = false; state.missionDone[4] = false; state.task5Checklist = { cek1: false, cek2: false, cek3: false }; renderMission('5'); updateUI(); }
+
+    function renderTask6() {
+        if (state.task6Complete) {
+            missionContent.innerHTML = `<h2>🎁 Misi 6: Mystery Box Adiwiyata</h2><div class="mission-content"><div class="mission-desc">✅ Selesai!</div><div style="margin:10px 0; font-size:2.2rem;">🏅 Detektif Adiwiyata</div><div class="mystery-info"><strong>🌟 HEBAT! KAMU DETEKTIF ADIWIYATA! 🌟</strong><br>Jawaban benar: ${state.mysteryCorrect.length} / 23</div><button class="btn-reset" onclick="resetTask6()" style="background:#ffa726; margin-top:12px;">↻ Ulangi Misi</button></div>`;
+            return;
+        }
+        const openedCount = state.mysteryOpened.length;
+        const correctCount = state.mysteryCorrect.length;
+        let html = `<h2>🎁 Misi 6: Mystery Box Adiwiyata</h2><div class="mission-content"><div class="mission-desc">Klik setiap kotak misteri! 📦</div><div class="mystery-header"><div class="stat-box">📦 Terbuka: <span class="num">${openedCount}</span> / 23</div><div class="stat-box">✅ Benar: <span class="num">${correctCount}</span> / 23</div></div><div class="mystery-grid" id="mysteryGrid">`;
+        state.mysteryBoxes.forEach((box, idx) => {
+            const isOpened = state.mysteryOpened.includes(idx);
+            const isCorrect = state.mysteryCorrect.includes(idx);
+            let cls = 'mystery-box';
+            if (isOpened) { cls += ' opened'; if (isCorrect) cls += ' correct'; else cls += ' wrong'; }
+            let content = isOpened ? (isCorrect ? '<span class="box-icon">✅</span>' : '<span class="box-icon">❌</span>') : '<span class="box-icon">🎁</span>';
+            html += `<div class="${cls}" data-index="${idx}"><span class="box-number">${idx+1}</span>${content}</div>`;
+        });
+        html += `</div><div class="mystery-info">💡 Klik kotak 🎁 untuk membuka soal. Setiap jawaban benar +5 XP bonus!</div><div class="mystery-finish-wrapper"><button class="mystery-finish-btn" id="mysteryFinishBtn">KLIK SELESAI</button></div><div class="task-feedback" id="taskFeedback"></div></div>`;
+        missionContent.innerHTML = html;
+        document.querySelectorAll('.mystery-box').forEach(box => {
+            box.addEventListener('click', function() {
+                if (state.task6Complete) return;
+                if (this.classList.contains('opened')) return;
+                const idx = parseInt(this.dataset.index);
+                if (isNaN(idx)) return;
+                openMysteryBox(idx);
+            });
+        });
+        const finishBtn = document.getElementById('mysteryFinishBtn');
+        if (finishBtn) finishBtn.addEventListener('click', function(e) { e.preventDefault(); e.stopPropagation(); if (state.task6Complete) return; showMysteryConfirmModal(); });
+    }
+    function showMysteryConfirmModal() {
+        const openedCount = state.mysteryOpened.length, correctCount = state.mysteryCorrect.length;
+        const overlay = document.createElement('div');
+        overlay.className = 'mystery-modal-overlay show';
+        let message = openedCount < 23 ? `Kamu baru membuka <strong>${openedCount}/23</strong> kotak.` : `Kamu sudah membuka <strong>semua ${openedCount} kotak</strong>!`;
+        overlay.innerHTML = `<div class="mystery-modal" style="max-width:480px;text-align:center;"><span style="font-size:3.5rem;display:block;margin-bottom:8px;">🏅</span><h3 style="color:#1b5e20;font-size:1.5rem;margin-bottom:12px;">SELESAIKAN MISI?</h3><div style="background:#fff8e1;padding:16px 20px;border-radius:16px;border:2px dashed #ffca28;margin-bottom:16px;"><div style="font-size:1rem;color:#4e342e;margin-bottom:8px;">📦 Kotak terbuka: <strong style="color:#e65100;">${openedCount}/23</strong></div><div style="font-size:1rem;color:#4e342e;margin-bottom:8px;">✅ Jawaban benar: <strong style="color:#1b5e20;">${correctCount}/23</strong></div><hr style="border:none;border-top:1px dashed #ffca28;margin:12px 0;"><div style="font-size:0.95rem;color:#4e342e;font-weight:600;">${message}</div></div><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;"><button id="confirmYesBtn" style="padding:14px 32px;border-radius:40px;border:4px solid #0d3b0e;background:linear-gradient(180deg,#66bb6a,#43a047);color:white;font-weight:600;font-size:1.05rem;cursor:pointer;font-family:inherit;">✅ Ya, Selesai!</button><button id="confirmNoBtn" style="padding:14px 32px;border-radius:40px;border:4px solid #8e0000;background:linear-gradient(180deg,#ef5350,#c62828);color:white;font-weight:600;font-size:1.05rem;cursor:pointer;font-family:inherit;">❌ Batal</button></div></div>`;
+        document.body.appendChild(overlay);
+        document.getElementById('confirmYesBtn').addEventListener('click', function() {
+            if (document.body.contains(overlay)) document.body.removeChild(overlay);
+            state.task6Complete = true; state.missionDone[5] = true;
+            addXP(100); unlockBadge('detektif-adiwiyata');
+            renderTask6(); updateUI();
+            showBadgePopup('Detektif Adiwiyata', 'Kamu berhasil menyelesaikan Misi 6!');
+        });
+        document.getElementById('confirmNoBtn').addEventListener('click', function() { if (document.body.contains(overlay)) document.body.removeChild(overlay); });
+        overlay.addEventListener('click', function(e) { if (e.target === overlay) { if (document.body.contains(overlay)) document.body.removeChild(overlay); } });
+    }
+    function showBadgePopup(badgeName, description) {
+        const popup = document.createElement('div');
+        popup.className = 'badge-popup-overlay show';
+        popup.innerHTML = `<div class="badge-popup-box"><div class="badge-popup-icon">🏅</div><h3 class="badge-popup-title">BADGE BARU!</h3><div class="badge-popup-name">${badgeName.toUpperCase()}</div><p class="badge-popup-desc">${description}</p><div class="badge-popup-xp">+100 XP</div><button class="badge-popup-btn" id="badgePopupOk">Lanjutkan 🚀</button></div>`;
+        document.body.appendChild(popup);
+        setTimeout(() => popup.classList.add('show'), 50);
+        document.getElementById('badgePopupOk').addEventListener('click', function() { popup.classList.remove('show'); setTimeout(() => { if (document.body.contains(popup)) document.body.removeChild(popup); }, 400); });
+    }
+    function openMysteryBox(idx) {
+        const box = state.mysteryBoxes[idx];
+        if (!box) return;
+        const overlay = document.createElement('div');
+        overlay.className = 'mystery-modal-overlay show';
+        const optionLabels = ['A', 'B', 'C', 'D'];
+        let optionsHtml = '';
+        box.options.forEach((opt, i) => { optionsHtml += `<button class="option-btn" data-option="${i}"><span class="opt-label">${optionLabels[i]}</span><span>${opt}</span></button>`; });
+        overlay.innerHTML = `<div class="mystery-modal"><button class="close-x" id="mysteryCloseX">✕</button><div class="q-label">🎁 Kotak Misteri #${idx + 1}</div><div class="q-text">${box.q}</div><div class="options">${optionsHtml}</div><div class="feedback-area" id="mysteryFeedback"></div><button class="btn-next" id="mysteryNextBtn">Lanjut ➡️</button></div>`;
+        document.body.appendChild(overlay);
+        let answered = false;
+        overlay.querySelectorAll('.option-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (answered) return;
+                answered = true;
+                const chosen = parseInt(this.dataset.option);
+                const isCorrect = (chosen === box.correct);
+                overlay.querySelectorAll('.option-btn').forEach(b => b.disabled = true);
+                if (isCorrect) {
+                    this.classList.add('selected-correct');
+                    if (!state.mysteryCorrect.includes(idx)) state.mysteryCorrect.push(idx);
+                    const fb = overlay.querySelector('#mysteryFeedback');
+                    fb.textContent = '✅ BENAR! Hebat! +5 XP'; fb.className = 'feedback-area show correct';
+                    addXP(5);
+                } else {
+                    this.classList.add('selected-wrong');
+                    overlay.querySelectorAll('.option-btn').forEach(b => { if (parseInt(b.dataset.option) === box.correct) b.classList.add('reveal-correct'); });
+                    const fb = overlay.querySelector('#mysteryFeedback');
+                    fb.textContent = `❌ Belum tepat. Jawaban benar: ${optionLabels[box.correct]}`; fb.className = 'feedback-area show wrong';
+                }
+                if (!state.mysteryOpened.includes(idx)) state.mysteryOpened.push(idx);
+                overlay.querySelector('#mysteryNextBtn').classList.add('show');
+            });
+        });
+        overlay.querySelector('#mysteryCloseX').addEventListener('click', function() { if (document.body.contains(overlay)) document.body.removeChild(overlay); renderTask6(); });
+        overlay.querySelector('#mysteryNextBtn').addEventListener('click', function() { if (document.body.contains(overlay)) document.body.removeChild(overlay); renderTask6(); });
+    }
+    function resetTask6() { state.task6Complete = false; state.missionDone[5] = false; state.mysteryOpened = []; state.mysteryCorrect = []; renderMission('6'); updateUI(); }
+
+    function renderTask7() {
+        if (state.task7Complete) {
+            missionContent.innerHTML = `<h2>🌟 Misi 7: Aksi Nyata Adiwiyata</h2><div class="mission-content"><div class="mission-desc">✅ Selesai! Kamu mendapatkan badge Aktivis Adiwiyata!</div><div style="margin:10px 0; font-size:2.2rem;">🏅 Aktivis Adiwiyata</div><div class="mystery-info" style="max-width:750px;"><strong>🌟 HEBAT! KAMU AKTIVIS ADIWIYATA! 🌟</strong></div><button class="btn-reset" onclick="resetTask7()" style="background:#ffa726; margin-top:12px;">↻ Ulangi Misi</button></div>`;
+            return;
+        }
+        const totalChallenges = state.actionChallenges.length;
+        let completedCount = 0;
+        state.actionChallenges.forEach(ch => { const stepData = state.actionProgress[ch.id] || {}; if (ch.steps.every((_, i) => stepData[i] === true)) completedCount++; });
+        const pct = Math.round((completedCount / totalChallenges) * 100);
+        let html = `<h2>🌟 Misi 7: Aksi Nyata Adiwiyata</h2><div class="mission-content"><div class="mission-desc">Pilih tantangan aksi nyata, lakukan, dan centang!</div><div class="action-progress"><div class="progress-info"><span>📊 Progress</span><span>${completedCount} / ${totalChallenges}</span></div><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${pct}%;"></div></div></div><div class="action-list">`;
+        state.actionChallenges.forEach(ch => {
+            const stepData = state.actionProgress[ch.id] || {};
+            const allDone = ch.steps.every((_, i) => stepData[i] === true);
+            html += `<div class="action-card ${allDone ? 'completed' : ''}" data-id="${ch.id}" data-cat="${ch.cat}"><div class="action-icon">${ch.icon}</div><div class="action-info"><div class="action-title">${ch.title}</div><div class="action-meta"><span>${ch.subtitle}</span><span>•</span><span class="level">🏅 ${ch.level}</span></div></div><div class="action-reward"><div class="points">+${ch.points}</div><span class="points-label">poin</span></div><div class="action-check">✓</div></div>`;
+        });
+        html += `</div>`;
+        if (completedCount > 0) html += `<div style="text-align:center;margin-top:24px;"><button id="finishTask7Btn" style="padding:18px 66px;border-radius:50px;border:5px solid #e65100;background:linear-gradient(180deg,#ffe082 0%,#ffb300 50%,#ff8f00 100%);color:#4e2e00;font-weight:600;font-size:1.35rem;letter-spacing:3px;cursor:pointer;font-family:inherit;">🌟 SELESAI 🌟</button></div>`;
+        html += `<div class="task-feedback" id="taskFeedback"></div></div>`;
+        missionContent.innerHTML = html;
+        document.querySelectorAll('.action-card').forEach(card => { card.addEventListener('click', function() { openActionDetail(this.dataset.id); }); });
+        const finishBtn = document.getElementById('finishTask7Btn');
+        if (finishBtn) finishBtn.addEventListener('click', function() { if (state.task7Complete) return; state.task7Complete = true; state.missionDone[6] = true; addXP(100); unlockBadge('aktivis-adiwiyata'); renderTask7(); updateUI(); showBadgePopup('Aktivis Adiwiyata', 'Kamu berhasil menyelesaikan Misi 7!'); });
+    }
+    function openActionDetail(challengeId) {
+        const ch = state.actionChallenges.find(c => c.id === challengeId);
+        if (!ch) return;
+        const stepData = state.actionProgress[ch.id] || {};
+        const overlay = document.createElement('div');
+        overlay.className = 'action-detail-overlay show';
+        let stepsHtml = '';
+        ch.steps.forEach((step, i) => { const checked = stepData[i] === true; stepsHtml += `<li class="action-step ${checked ? 'checked' : ''}" data-step="${i}"><span class="step-num">${i + 1}</span><span class="step-text">${step}</span><span class="step-check">✓</span></li>`; });
+        overlay.innerHTML = `<div class="action-detail-box"><div class="action-detail-header"><h3>${ch.title}</h3><button class="action-detail-close" id="actionDetailClose">✕</button></div><div class="action-detail-body"><div class="action-detail-badge"><div class="big-icon">${ch.icon}</div><div class="info"><h4>${ch.subtitle}</h4><div class="lvl">🏅 ${ch.level}</div><div class="reward">Reward: +${ch.points} poin</div></div></div><div class="action-detail-section"><h5>📖 Deskripsi</h5><p>${ch.description}</p></div><div class="action-detail-section"><h5>📝 Langkah-langkah</h5><ul class="action-steps">${stepsHtml}</ul></div><button class="action-detail-btn" id="actionSaveBtn">💾 Tandai Selesai</button></div></div>`;
+        document.body.appendChild(overlay);
+        overlay.querySelectorAll('.action-step').forEach(stepEl => {
+            stepEl.addEventListener('click', function() {
+                const stepIdx = parseInt(this.dataset.step);
+                if (!state.actionProgress[ch.id]) state.actionProgress[ch.id] = {};
+                state.actionProgress[ch.id][stepIdx] = !state.actionProgress[ch.id][stepIdx];
+                if (state.actionProgress[ch.id][stepIdx]) this.classList.add('checked'); else this.classList.remove('checked');
+            });
+        });
+        overlay.querySelector('#actionDetailClose').addEventListener('click', function() { if (document.body.contains(overlay)) document.body.removeChild(overlay); renderTask7(); });
+        const saveBtn = overlay.querySelector('#actionSaveBtn');
+        if (saveBtn) saveBtn.addEventListener('click', function() {
+            const allDoneNow = ch.steps.every((_, i) => state.actionProgress[ch.id] && state.actionProgress[ch.id][i] === true);
+            if (allDoneNow) {
+                addXP(ch.points);
+                if (document.body.contains(overlay)) document.body.removeChild(overlay);
+                renderTask7();
+            } else {
+                showFeedback('❌ Centang semua langkah dulu!', '#c62828', 2000);
+            }
+        });
+        overlay.addEventListener('click', function(e) { if (e.target === overlay) { if (document.body.contains(overlay)) document.body.removeChild(overlay); renderTask7(); } });
+    }
+    function resetTask7() { state.task7Complete = false; state.missionDone[6] = false; state.actionProgress = {}; renderMission('7'); updateUI(); }
+
+    function ensureCertificateDOMComplete() {
+        if (certName) certName.textContent = getPlayerName();
+        if (certBadges) { const badgesStr = state.badges.map(() => '🏅').join(''); certBadges.textContent = badgesStr || '🏅'; }
+        setCertificateDate();
+    }
+    function showCertificate() { ensureCertificateDOMComplete(); setCertificateDate(); certOverlay.classList.add('show'); }
+    function closeCertificate() { certOverlay.classList.remove('show'); }
+    function downloadCertificatePDF() {
+        const downloadBtn = document.getElementById('downloadCertBtn');
+        if (typeof html2canvas === 'undefined' || typeof window.jspdf === 'undefined') { alert('⏳ Library PDF sedang dimuat...'); return; }
+        ensureCertificateDOMComplete(); setCertificateDate();
+        const originalText = downloadBtn.innerHTML;
+        downloadBtn.innerHTML = '⏳ Memproses PDF...';
+        downloadBtn.disabled = true;
+        const playerName = (state.playerName || 'Pahlawan').trim();
+        const safeName = playerName.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_') || 'Pahlawan';
+        const clone = document.createElement('div');
+        clone.style.cssText = 'position:fixed;left:-9999px;top:0;width:1123px;height:794px;background:#ffffff;z-index:-9999;padding:0;margin:0;box-sizing:border-box;overflow:hidden;';
+        const innerContent = document.getElementById('certificateInner').cloneNode(true);
+        innerContent.querySelectorAll('.cert-actions, .close-btn').forEach(el => el.remove());
+        clone.innerHTML = `<div style="width:1123px;height:794px;background:#fdfdf5;display:flex;justify-content:center;align-items:center;padding:0;margin:0;box-sizing:border-box;position:relative;"><div style="width:96%;height:92%;background:#fdfdf5;border:6px solid #1b5e20;border-radius:12px;padding:0;margin:0;box-sizing:border-box;position:relative;overflow:hidden;"><div style="width:100%;height:100%;border:2px solid #c8a44a;border-radius:8px;margin:0;padding:20px 30px;box-sizing:border-box;position:relative;background:#fdfdf5;display:flex;flex-direction:column;justify-content:space-between;align-items:center;overflow:hidden;">${innerContent.outerHTML}</div></div></div>`;
+        document.body.appendChild(clone);
+        const images = clone.querySelectorAll('img');
+        let loadedCount = 0; const totalImages = images.length;
+        const renderPDF = () => {
+            html2canvas(clone, { scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#ffffff', logging: false, width: 1123, height: 794, windowWidth: 1123, windowHeight: 794 }).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true });
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = pdf.internal.pageSize.getHeight();
+                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                pdf.save(`Sertifikat-ECO-SPENSASED-${safeName}.pdf`);
+                if (document.body.contains(clone)) document.body.removeChild(clone);
+                downloadBtn.innerHTML = originalText;
+                downloadBtn.disabled = false;
+            }).catch(err => {
+                console.error('Gagal PDF:', err);
+                if (document.body.contains(clone)) document.body.removeChild(clone);
+                downloadBtn.innerHTML = originalText;
+                downloadBtn.disabled = false;
+                const useFallback = confirm('⚠️ Gagal mengunduh PDF otomatis.\n\nKlik OK untuk Print dan pilih "Save as PDF".');
+                if (useFallback) window.print();
+            });
+        };
+        if (totalImages === 0) setTimeout(renderPDF, 500);
+        else {
+            images.forEach(img => {
+                if (img.complete) { loadedCount++; if (loadedCount === totalImages) renderPDF(); }
+                else { img.onload = () => { loadedCount++; if (loadedCount === totalImages) renderPDF(); }; img.onerror = () => { loadedCount++; if (loadedCount === totalImages) renderPDF(); }; }
+            });
+            setTimeout(() => { if (document.body.contains(clone) && loadedCount < totalImages) renderPDF(); }, 3000);
+        }
+    }
+
+    function resetAll() {
+        state.xp = 0; state.badges = [];
+        state.missionDone = [false, false, false, false, false, false, false];
+        state.trashRemaining = state.trashItems.map(i => ({ ...i }));
+        shuffleArray(state.trashRemaining);
+        state.task1Score = 0; state.task1Complete = false;
+        state.compostSelected = []; state.compostShuffled = [];
+        state.task2Complete = false;
+        state.cityItems = []; state.task3Complete = false; state.task3Success = false;
+        state.task4Complete = false;
+        state.trashCalculator = { organik: 0, kertas: 0, plastik: 0, logam: 0, kaca: 0, b3: 0, jumlahSiswa: 0, jumlahHariBulan: 30, totalPerHari: 0, totalPerSiswa: 0, totalPerMinggu: 0, totalPerBulan: 0, sudahDihitung: false };
+        state.task5Complete = false;
+        state.task5Checklist = { cek1: false, cek2: false, cek3: false };
+        state.task6Complete = false;
+        state.mysteryOpened = []; state.mysteryCorrect = [];
+        state.task7Complete = false;
+        state.actionProgress = {};
+        state.currentTab = '1';
+        renderMission('1'); updateUI();
+        closeCertificate();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const startAdventureBtnEl = document.getElementById('startAdventureBtn');
+        if (startAdventureBtnEl) {
+            startAdventureBtnEl.addEventListener('click', function(e) {
+                e.preventDefault(); e.stopPropagation();
+                showDashboard();
+            });
+        }
+        const musicBtn = document.getElementById('musicBtn');
+        const bgMusic = document.getElementById('bgMusic');
+        const musicIcon = document.getElementById('musicIcon');
+        if (bgMusic) bgMusic.volume = 0.35;
+        if (musicBtn) {
+            musicBtn.addEventListener('click', function() {
+                if (!bgMusic) return;
+                if (bgMusic.paused) { bgMusic.play().then(() => { if (musicIcon) musicIcon.textContent = '🔊'; musicBtn.classList.add('playing'); }).catch(() => {}); }
+                else { bgMusic.pause(); if (musicIcon) musicIcon.textContent = '🔇'; musicBtn.classList.remove('playing'); }
+            });
+        }
+        if (homeFloatingBtn) {
+            homeFloatingBtn.addEventListener('click', function() {
+                state.gameStarted = false; state.coverShown = true;
+                showCoverPage();
+                nameInput.value = ''; nameInput.classList.remove('input-error');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+        if (startBtn) startBtn.addEventListener('click', startGame);
+        if (nameInput) {
+            nameInput.addEventListener('keypress', e => { if (e.key === 'Enter') startGame(); });
+            nameInput.addEventListener('input', function() { if (this.value.trim() !== '') this.classList.remove('input-error'); });
+        }
+        const nameAlertOk = document.getElementById('nameAlertOk');
+        const nameAlertOverlay = document.getElementById('nameAlertOverlay');
+        if (nameAlertOk) nameAlertOk.addEventListener('click', () => { hideNameAlert(); setTimeout(() => nameInput.focus(), 100); });
+        if (nameAlertOverlay) nameAlertOverlay.addEventListener('click', function(e) { if (e.target === this) hideNameAlert(); });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') hideNameAlert(); });
+        document.querySelectorAll('.mission-btn').forEach(btn => {
+            btn.addEventListener('click', function() { if (!state.gameStarted) return; renderMission(this.dataset.mission); });
+        });
+        const resetBtn = document.getElementById('resetBtn');
+        if (resetBtn) resetBtn.addEventListener('click', () => { if (!state.gameStarted) return; resetAll(); });
+        if (certificateBtn) certificateBtn.addEventListener('click', showCertificate);
+        if (closeCertBtn) closeCertBtn.addEventListener('click', closeCertificate);
+        if (certOverlay) certOverlay.addEventListener('click', function(e) { if (e.target === this) closeCertificate(); });
+        const printCertBtn = document.getElementById('printCertBtn');
+        if (printCertBtn) printCertBtn.addEventListener('click', () => { ensureCertificateDOMComplete(); setCertificateDate(); certOverlay.classList.add('show'); setTimeout(() => window.print(), 500); });
+        const downloadCertBtn = document.getElementById('downloadCertBtn');
+        if (downloadCertBtn) downloadCertBtn.addEventListener('click', downloadCertificatePDF);
+        setCertificateDate();
+    });
+
+    window.resetTask1 = resetTask1;
+    window.resetTask2 = resetTask2;
+    window.resetTask3 = resetTask3;
+    window.resetTask4 = resetTask4;
+    window.resetTask5 = resetTask5;
+    window.resetTask6 = resetTask6;
+    window.resetTask7 = resetTask7;
+    window.resetAll = resetAll;
+    window.renderMission = renderMission;
+    window.startGame = startGame;
+    window.showCertificate = showCertificate;
+    window.closeCertificate = closeCertificate;
+</script>
+</body>
+</html>
